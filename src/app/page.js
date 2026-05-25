@@ -48,6 +48,7 @@ export default async function Home() {
             </div>
             <div className="hero-media">
               <div className="hero-photo">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/assets/hero-vsl.jpg" alt="Children learning sign language" />
               </div>
               <div className="floating-note">
@@ -62,6 +63,7 @@ export default async function Home() {
         </section>
 
         <section id="about" className="section split">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="illustration" src="/assets/illus-hand.png" alt="Friendly hand illustration" />
           <div>
             <span className="eyebrow">What is VSL?</span>
@@ -119,6 +121,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="illustration" src="/assets/illus-friends.png" alt="Friends connecting" />
         </section>
 
@@ -133,6 +136,7 @@ export default async function Home() {
                   <Link className="btn btn-dark" href="/lessons">Explore lessons</Link>
                 </div>
               </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="illustration" src="/assets/illus-grad.png" alt="" />
             </div>
           </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LogoutButton from './LogoutButton';
 
 export function HomeNav() {
   return (
@@ -8,9 +9,9 @@ export function HomeNav() {
         <span>SignLearn</span>
       </Link>
       <nav className="nav-links">
-        <a href="/#about">About VSL</a>
-        <a href="/#why">Why learn</a>
-        <a href="/#who">For you</a>
+        <Link href="/#about">About VSL</Link>
+        <Link href="/#why">Why learn</Link>
+        <Link href="/#who">For you</Link>
         <Link href="/lessons">Lessons</Link>
       </nav>
       <div className="nav-actions">
@@ -65,10 +66,11 @@ export function DashboardShell({ role, title, children }) {
             </Link>
           ))}
         </nav>
-        <div className="card" style={{ boxShadow: 'none', marginTop: 22 }}>
+        <div className="card" style={{ boxShadow: 'none', marginTop: 22, marginBottom: 'auto' }}>
           <strong>Sign Language 101</strong>
           <p className="muted" style={{ marginBottom: 0 }}>One course, structured lessons, clear progress.</p>
         </div>
+        <LogoutButton />
       </aside>
       <section className="dashboard-main">
         <header className="topbar">
