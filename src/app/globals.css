@@ -517,6 +517,24 @@ textarea {
   text-align: center;
 }
 
+.admin-card-head,
+.user-row,
+.user-badges {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-card-head,
+.user-row {
+  justify-content: space-between;
+}
+
+.user-badges {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -544,7 +562,9 @@ textarea {
   .home-nav,
   .topbar,
   .page-title,
-  .chapter-head {
+  .chapter-head,
+  .admin-card-head,
+  .user-row {
     align-items: flex-start;
     flex-direction: column;
   }

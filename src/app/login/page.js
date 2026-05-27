@@ -27,6 +27,10 @@ export default function LoginPage() {
         return;
       }
       localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
+      if (payload.data.user.must_change_password) {
+        window.location.href = '/change-password';
+        return;
+      }
       window.location.href = `/${payload.data.user.role.toLowerCase()}`;
     } catch (error) {
       setMessage('Network error or backend is offline.');
