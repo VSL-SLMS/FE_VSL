@@ -12,21 +12,29 @@ export default function LoginPage() {
     event.preventDefault();
     setMessage('Signing in...');
     const form = new FormData(event.currentTarget);
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: form.get('email'),
-        password: form.get('password')
-      })
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      setMessage(payload.message || 'Login failed.');
-      return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.get('email'),
+          password: form.get('password')
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setMessage(payload.message || 'Login failed.');
+        return;
+      }
+      localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
+      if (payload.data.user.must_change_password) {
+        window.location.href = '/change-password';
+        return;
+      }
+      window.location.href = `/${payload.data.user.role.toLowerCase()}`;
+    } catch (error) {
+      setMessage('Network error or backend is offline.');
     }
-    localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
-    window.location.href = `/${payload.data.user.role.toLowerCase()}`;
   }
 
   return (

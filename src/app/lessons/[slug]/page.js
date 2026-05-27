@@ -63,6 +63,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
                         {(section.items || []).map((item) => (
                           <article className="card sign-card" key={item.id}>
                             {item.normalized_image_url && (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img src={backendAssetUrl(item.normalized_image_url)} alt={item.title} />
                             )}
                             <h3>{item.title}</h3>
@@ -81,6 +82,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
                 {pages.map((page) => (
                   <article className="book-page" key={page.id}>
                     <span className="pill">Page {page.page_number}</span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={backendAssetUrl(page.image_path)} alt={`Page ${page.page_number}`} />
                   </article>
                 ))}
