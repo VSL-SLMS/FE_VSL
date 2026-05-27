@@ -61,7 +61,7 @@ export default async function LessonsPage() {
           ))}
 
           {!parts.length && (
-            <div className="empty">No lessons returned from backend. Start backend on port 5050 and import database.</div>
+            <div className="empty">No lessons returned from backend. Check the backend API connection and import the VSL database.</div>
           )}
         </div>
       </main>
