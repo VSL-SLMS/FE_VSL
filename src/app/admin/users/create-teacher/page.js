@@ -4,7 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DashboardShell } from '../../../components/Nav';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api';
+const DEFAULT_API_BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://bevsl-production.up.railway.app/api'
+    : 'http://localhost:5050/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
 
 export default function CreateTeacherPage() {
   const [currentUser] = useState(() => {

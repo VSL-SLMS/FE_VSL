@@ -33,8 +33,8 @@ NEXT_PUBLIC_BACKEND_ORIGIN=http://localhost:5050
 Set these environment variables in Vercel before deploying:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain.com/api
-NEXT_PUBLIC_BACKEND_ORIGIN=https://your-backend-domain.com
+NEXT_PUBLIC_API_BASE_URL=https://bevsl-production.up.railway.app/api
+NEXT_PUBLIC_BACKEND_ORIGIN=https://bevsl-production.up.railway.app
 ```
 
 Use the deployed backend origin, not `localhost`.
