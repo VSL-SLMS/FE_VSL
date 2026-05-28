@@ -3,12 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
-
-const DEFAULT_API_BASE_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://bevsl-production.up.railway.app/api'
-    : 'http://localhost:5050/api';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
+import { apiUrl } from '../../../lib/api';
 
 export default function AdminUsersPage() {
   const [currentUser] = useState(() => {
@@ -34,7 +29,7 @@ export default function AdminUsersPage() {
       return;
     }
 
-    fetch(`${API_BASE_URL}/admin/users`, {
+    fetch(apiUrl('/admin/users'), {
       headers: {
         Authorization: `Bearer ${currentUser.token}`
       }

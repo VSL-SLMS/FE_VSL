@@ -2,12 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-
-const DEFAULT_API_BASE_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://bevsl-production.up.railway.app/api'
-    : 'http://localhost:5050/api';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
+import { apiUrl } from '../../lib/api';
 
 export default function LoginPage() {
   const [message, setMessage] = useState('');
@@ -17,7 +12,7 @@ export default function LoginPage() {
     setMessage('Signing in...');
     const form = new FormData(event.currentTarget);
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(apiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

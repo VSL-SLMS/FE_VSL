@@ -2,12 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-
-const DEFAULT_API_BASE_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://bevsl-production.up.railway.app/api'
-    : 'http://localhost:5050/api';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL;
+import { apiUrl } from '../../lib/api';
 
 export default function ChangePasswordPage() {
   const [message, setMessage] = useState('');
@@ -35,7 +30,7 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    const response = await fetch(apiUrl('/auth/change-password'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
