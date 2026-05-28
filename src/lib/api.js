@@ -13,8 +13,15 @@ function removeTrailingSlash(value) {
   return value.replace(/\/+$/, '');
 }
 
+function normalizeUrlValue(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 function normalizeBackendOrigin(value) {
-  const rawValue = value || DEFAULT_BACKEND_ORIGIN;
+  const rawValue = normalizeUrlValue(value || DEFAULT_BACKEND_ORIGIN);
 
   if (process.env.NODE_ENV === 'production' && isLocalhostUrl(rawValue)) {
     return PRODUCTION_BACKEND_ORIGIN;
@@ -25,7 +32,7 @@ function normalizeBackendOrigin(value) {
 
 function normalizeApiBaseUrl(value) {
   const origin = normalizeBackendOrigin(process.env.NEXT_PUBLIC_BACKEND_ORIGIN);
-  const rawValue = value || `${origin}/api`;
+  const rawValue = normalizeUrlValue(value || `${origin}/api`);
 
   if (process.env.NODE_ENV === 'production' && isLocalhostUrl(rawValue)) {
     return `${PRODUCTION_BACKEND_ORIGIN}/api`;
