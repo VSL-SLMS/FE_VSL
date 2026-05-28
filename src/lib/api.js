@@ -52,14 +52,19 @@ export function apiUrl(path) {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
+function productionApiUrl(path) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${PRODUCTION_BACKEND_ORIGIN}/api${normalizedPath}`;
+}
+
 export function backendAssetUrl(path) {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return `${BACKEND_ORIGIN}${path}`;
 }
 
-export async function fetchApi(path) {
-  const response = await fetch(apiUrl(path), {
+async function fetchJson(url) {
+  const response = await fetch(url, {
     cache: 'no-store'
   });
 
@@ -68,4 +73,19 @@ export async function fetchApi(path) {
   }
 
   return response.json();
+}
+
+export async function fetchApi(path) {
+  const primaryUrl = apiUrl(path);
+  const fallbackUrl = productionApiUrl(path);
+
+  try {
+    return await fetchJson(primaryUrl);
+  } catch (error) {
+    if (primaryUrl === fallbackUrl) {
+      throw error;
+    }
+
+    return fetchJson(fallbackUrl);
+  }
 }
