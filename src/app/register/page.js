@@ -2,36 +2,30 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api';
+import { registerAction } from '../actions/auth';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(event) {
     event.preventDefault();
-    setMessage('Creating account...');
+    setLoading(true);
     const form = new FormData(event.currentTarget);
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.get('name'),
-          email: form.get('email'),
-          password: form.get('password'),
-          role: form.get('role')
-        })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setMessage(payload.message || 'Registration failed.');
-        return;
-      }
-      localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
-      window.location.href = `/${payload.data.user.role.toLowerCase()}`;
-    } catch (error) {
-      setMessage('Network error or backend is offline.');
+
+    const name = form.get('name');
+    const email = form.get('email');
+    const password = form.get('password');
+    const role = form.get('role');
+
+    const result = await registerAction(name, email, password, role);
+
+    if (!result.success) {
+      toast.error(result.message);
+      setLoading(false);
+    } else {
+      toast.success('Registration successful!');
+      window.location.href = `/${result.user.role.toLowerCase()}`;
     }
   }
 
@@ -52,9 +46,10 @@ export default function RegisterPage() {
               <option value="TEACHER">Teacher</option>
             </select>
           </div>
-          <button className="btn btn-primary" type="submit">Create account</button>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Creating account...' : 'Create account'}
+          </button>
         </form>
-        {message && <p className="muted">{message}</p>}
         <p className="muted">Already have an account? <Link href="/login">Log in</Link></p>
       </section>
     </main>
