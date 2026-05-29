@@ -2,37 +2,28 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { apiUrl } from '../../lib/api';
+import { loginAction } from '../actions/auth';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(event) {
     event.preventDefault();
-    setMessage('Signing in...');
+    setLoading(true);
     const form = new FormData(event.currentTarget);
-    try {
-      const response = await fetch(apiUrl('/auth/login'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: form.get('email'),
-          password: form.get('password')
-        })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setMessage(payload.message || 'Login failed.');
-        return;
-      }
-      localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
-      if (payload.data.user.must_change_password) {
-        window.location.href = '/change-password';
-        return;
-      }
-      window.location.href = `/${payload.data.user.role.toLowerCase()}`;
-    } catch (error) {
-      setMessage('Network error or backend is offline.');
+
+    const email = form.get('email');
+    const password = form.get('password');
+
+    const result = await loginAction(email, password);
+
+    if (!result.success) {
+      toast.error(result.message);
+      setLoading(false);
+    } else {
+      toast.success('Login successful!');
+      window.location.href = `/${result.user.role.toLowerCase()}`;
     }
   }
 
@@ -45,9 +36,10 @@ export default function LoginPage() {
         <form className="form-grid" onSubmit={onSubmit}>
           <div className="field"><label>Email</label><input name="email" type="email" required /></div>
           <div className="field"><label>Password</label><input name="password" type="password" required /></div>
-          <button className="btn btn-primary" type="submit">Log in</button>
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Signing in...' : 'Log in'}
+          </button>
         </form>
-        {message && <p className="muted">{message}</p>}
         <p className="muted">No account? <Link href="/register">Create one</Link></p>
       </section>
     </main>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { HomeNav } from './components/Nav';
 import { fetchApi } from '../lib/api';
+import Image from 'next/image';
 
 async function getOverview() {
   try {
@@ -48,8 +49,7 @@ export default async function Home() {
             </div>
             <div className="hero-media">
               <div className="hero-photo">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/assets/hero-vsl.jpg" alt="Children learning sign language" />
+                <Image src="/assets/hero-vsl.jpg" alt="Children learning sign language" width={400} height={300} style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
               </div>
               <div className="floating-note">
                 <span className="brand-mark" style={{ background: 'var(--yellow)', color: 'var(--text)' }}>🎉</span>
@@ -63,8 +63,7 @@ export default async function Home() {
         </section>
 
         <section id="about" className="section split">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="illustration" src="/assets/illus-hand.png" alt="Friendly hand illustration" />
+          <Image className="illustration" src="/assets/illus-hand.png" alt="Friendly hand illustration" width={300} height={300} />
           <div>
             <span className="eyebrow">What is VSL?</span>
             <h2>Vietnamese Sign Language</h2>
@@ -121,8 +120,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="illustration" src="/assets/illus-friends.png" alt="Friends connecting" />
+          <Image className="illustration" src="/assets/illus-friends.png" alt="Friends connecting" width={300} height={300} />
         </section>
 
         <section className="section">
@@ -136,8 +134,7 @@ export default async function Home() {
                   <Link className="btn btn-dark" href="/lessons">Explore lessons</Link>
                 </div>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="illustration" src="/assets/illus-grad.png" alt="" />
+              <Image className="illustration" src="/assets/illus-grad.png" alt="" width={300} height={300} />
             </div>
           </div>
         </section>

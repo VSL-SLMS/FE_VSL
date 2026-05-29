@@ -1,8 +1,10 @@
 'use client';
 
+import { logoutAction } from '../actions/auth';
+
 export default function LogoutButton() {
-  function handleLogout() {
-    localStorage.removeItem('slms_user');
+  async function handleLogout() {
+    await logoutAction();
     window.location.href = '/login';
   }
 

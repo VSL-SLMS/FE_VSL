@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Nav from '../../components/Nav';
 import { backendAssetUrl, fetchApi } from '../../../lib/api';
+import Image from 'next/image';
 
 async function getLesson(slug) {
   try {
@@ -63,8 +64,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
                         {(section.items || []).map((item) => (
                           <article className="card sign-card" key={item.id}>
                             {item.normalized_image_url && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={backendAssetUrl(item.normalized_image_url)} alt={item.title} />
+                              <Image src={backendAssetUrl(item.normalized_image_url)} alt={item.title} width={300} height={200} style={{ width: '100%', height: 'auto', objectFit: 'cover' }} />
                             )}
                             <h3>{item.title}</h3>
                             <p className="muted">{item.description}</p>
@@ -82,8 +82,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
                 {pages.map((page) => (
                   <article className="book-page" key={page.id}>
                     <span className="pill">Page {page.page_number}</span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={backendAssetUrl(page.image_path)} alt={`Page ${page.page_number}`} />
+                    <Image src={backendAssetUrl(page.image_path)} alt={`Page ${page.page_number}`} width={800} height={1000} style={{ width: '100%', height: 'auto' }} />
                   </article>
                 ))}
               </div>
