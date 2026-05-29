@@ -34,7 +34,7 @@ export default function RegisterPage() {
       <section className="auth-panel">
         <Link href="/" className="brand"><span className="brand-mark">✦</span><span>SignLearn</span></Link>
         <h1>Create account</h1>
-        <p className="muted">Students and teachers can register. Admin is managed separately.</p>
+        <p className="muted">Public registration is for students only. Teacher accounts are created by Admin.</p>
         <form className="form-grid" onSubmit={onSubmit}>
           <div className="field"><label>Name</label><input name="name" required /></div>
           <div className="field"><label>Email</label><input name="email" type="email" required /></div>

@@ -26,7 +26,7 @@ export default async function SelectTeacherPage() {
           </article>
         ))}
         {!teachers.length && (
-          <div className="empty">No teacher account exists yet. Register a teacher account first.</div>
+          <div className="empty">No teacher account exists yet. Ask Admin to create a teacher account first.</div>
         )}
       </div>
     </DashboardShell>
