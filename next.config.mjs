@@ -7,6 +7,10 @@ const nextConfig = {
         hostname: 'localhost',
         port: '5050',
       },
+      {
+        protocol: 'https',
+        hostname: 'bevsl-production.up.railway.app',
+      },
     ],
   },
 };

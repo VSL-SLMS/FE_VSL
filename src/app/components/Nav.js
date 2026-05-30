@@ -12,11 +12,11 @@ export function HomeNav() {
         <Link href="/#about">About VSL</Link>
         <Link href="/#why">Why learn</Link>
         <Link href="/#who">For you</Link>
-        <Link href="/lessons">Lessons</Link>
+        <Link href="/curriculum">Curriculum</Link>
       </nav>
       <div className="nav-actions">
         <Link href="/login">Log in</Link>
-        <Link className="btn btn-primary" href="/login">Get started</Link>
+        <Link className="btn btn-primary" href="/register">Register</Link>
       </div>
     </header>
   );
@@ -76,7 +76,7 @@ export function DashboardShell({ role, title, children }) {
         <header className="topbar">
           <input className="search-box" placeholder="Search lessons, students..." />
           <div className="nav-actions">
-            <Link href="/lessons">Public lessons</Link>
+            <Link href="/curriculum">Curriculum</Link>
             <span className="brand-mark" style={{ width: 34, height: 34 }}>{role[0].toUpperCase()}</span>
           </div>
         </header>

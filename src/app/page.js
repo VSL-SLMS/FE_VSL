@@ -34,8 +34,8 @@ export default async function Home() {
                 cards, teacher workflows, grading, appeals, and progress tracking.
               </p>
               <div className="actions">
-                <Link className="btn btn-primary" href="/login">Start learning</Link>
-                <Link className="btn" href="/lessons">Explore lessons</Link>
+                <Link className="btn btn-primary" href="/curriculum">View curriculum</Link>
+                <Link className="btn" href="/login">Login to start</Link>
               </div>
               <div className="social-proof">
                 <div className="avatar-stack">
@@ -130,8 +130,8 @@ export default async function Home() {
                 <h2>Ready to sign your first word?</h2>
                 <p style={{ opacity: 0.9 }}>Free to start. Pick a teacher. Begin today.</p>
                 <div className="actions">
-                  <Link className="btn" href="/login">Log in to start</Link>
-                  <Link className="btn btn-dark" href="/lessons">Explore lessons</Link>
+                  <Link className="btn" href="/curriculum">View curriculum</Link>
+                  <Link className="btn btn-dark" href="/login">Log in to start</Link>
                 </div>
               </div>
               <Image className="illustration" src="/assets/illus-grad.png" alt="" width={300} height={300} />

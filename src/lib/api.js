@@ -4,6 +4,7 @@ const DEFAULT_BACKEND_ORIGIN =
   process.env.NODE_ENV === 'production'
     ? PRODUCTION_BACKEND_ORIGIN
     : 'http://localhost:5050';
+const DEFAULT_FETCH_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 5000);
 
 function isLocalhostUrl(value) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value);
@@ -44,7 +45,7 @@ function normalizeApiBaseUrl(value) {
 
 const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
 const BACKEND_ORIGIN = normalizeBackendOrigin(
-  process.env.NEXT_PUBLIC_BACKEND_ORIGIN || API_BASE_URL
+  process.env.NEXT_PUBLIC_BACKEND_ORIGIN || PRODUCTION_BACKEND_ORIGIN
 );
 
 export function apiUrl(path) {
@@ -57,6 +58,12 @@ function productionApiUrl(path) {
   return `${PRODUCTION_BACKEND_ORIGIN}/api${normalizedPath}`;
 }
 
+function createTimeoutSignal() {
+  if (DEFAULT_FETCH_TIMEOUT_MS <= 0) return undefined;
+  if (typeof AbortSignal === 'undefined' || typeof AbortSignal.timeout !== 'function') return undefined;
+  return AbortSignal.timeout(DEFAULT_FETCH_TIMEOUT_MS);
+}
+
 export function backendAssetUrl(path) {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -64,9 +71,12 @@ export function backendAssetUrl(path) {
 }
 
 async function fetchJson(url, options = {}) {
+  const timeoutSignal = options.signal || createTimeoutSignal();
+
   const response = await fetch(url, {
     cache: 'no-store',
     ...options,
+    signal: timeoutSignal,
     headers: {
       ...(options.headers || {})
     }

@@ -297,6 +297,359 @@ textarea {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.curriculum-shell {
+  background: var(--bg);
+}
+
+.curriculum-container {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.curriculum-narrow {
+  width: min(760px, calc(100% - 40px));
+}
+
+.curriculum-hero {
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 82% 12%, color-mix(in oklch, var(--yellow) 42%, transparent), transparent 34%),
+    linear-gradient(90deg, white 0%, var(--bg) 58%, color-mix(in oklch, var(--yellow) 24%, white) 100%);
+  padding: 86px 0 72px;
+}
+
+.curriculum-kicker {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+  padding: 7px 13px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.04);
+}
+
+.curriculum-hero h1 {
+  max-width: 760px;
+  margin: 24px 0 18px;
+  font-size: clamp(42px, 6vw, 68px);
+  line-height: 1.08;
+}
+
+.curriculum-hero p {
+  max-width: 600px;
+  color: var(--muted);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.text-teal {
+  color: var(--primary);
+}
+
+.text-orange {
+  color: var(--orange);
+}
+
+.curriculum-stats {
+  display: grid;
+  max-width: 760px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.curriculum-stat {
+  display: flex;
+  min-height: 70px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  padding: 14px 16px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
+}
+
+.curriculum-stat > span {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+}
+
+.curriculum-stat strong,
+.curriculum-stat small {
+  display: block;
+}
+
+.curriculum-stat strong {
+  font-size: 13px;
+}
+
+.curriculum-stat small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.curriculum-section {
+  padding: 58px 0 56px;
+}
+
+.curriculum-section h2,
+.curriculum-outcomes h2,
+.curriculum-final h2 {
+  margin: 8px 0 24px;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.1;
+}
+
+.journey-intro {
+  max-width: 680px;
+  margin: -8px 0 24px;
+  color: var(--muted);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.journey-list {
+  display: grid;
+  gap: 12px;
+}
+
+.journey-card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 94px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--card);
+  padding: 18px 20px;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.06);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.journey-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.journey-number {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 16px;
+  background: color-mix(in oklch, var(--primary) 24%, white);
+  color: var(--primary-dark);
+  font-weight: 1000;
+}
+
+.journey-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.journey-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+.free-badge {
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--success) 18%, white);
+  color: var(--success);
+  font-size: 10px;
+  font-weight: 1000;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.journey-copy,
+.journey-meta {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.journey-action {
+  display: inline-flex;
+  min-width: 46px;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--line) 35%, white);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 1000;
+  padding: 0 12px;
+}
+
+.journey-action.is-open {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--text);
+}
+
+.curriculum-outcomes {
+  background: color-mix(in oklch, var(--accent) 62%, white);
+  padding: 64px 0;
+}
+
+.outcome-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.outcome-pill {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font-weight: 850;
+  padding: 0 20px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
+}
+
+.outcome-pill span {
+  color: var(--success);
+  font-weight: 1000;
+}
+
+.curriculum-final {
+  padding: 74px 20px 60px;
+}
+
+.curriculum-cta-card {
+  position: relative;
+  overflow: hidden;
+  width: min(860px, 100%);
+  margin: 0 auto;
+  border-radius: 24px;
+  background: var(--primary);
+  color: white;
+  padding: 38px 44px;
+  box-shadow: var(--shadow);
+}
+
+.curriculum-cta-card::after {
+  position: absolute;
+  right: -80px;
+  top: -90px;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--yellow) 18%, transparent);
+  content: "";
+}
+
+.curriculum-cta-card p,
+.curriculum-cta-card span {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: 0;
+  opacity: 0.9;
+  font-weight: 850;
+}
+
+.curriculum-cta-card h2,
+.curriculum-cta-card .btn {
+  position: relative;
+  z-index: 1;
+}
+
+.curriculum-cta-card h2 {
+  color: white;
+  margin: 12px 0 8px;
+}
+
+.curriculum-cta-card .btn {
+  margin-top: 24px;
+  border: 0;
+  background: color-mix(in oklch, var(--yellow) 40%, white);
+}
+
+.free-lesson-head {
+  align-items: flex-start;
+}
+
+.free-lesson-intro {
+  border-color: color-mix(in oklch, var(--primary) 42%, var(--line));
+  background: color-mix(in oklch, var(--accent) 45%, white);
+}
+
+.lesson-reader-section h2 {
+  margin-bottom: 4px;
+}
+
+.lesson-article {
+  display: grid;
+  gap: 14px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.lesson-article h3 {
+  margin: 10px 0 0;
+}
+
+.lesson-article p {
+  margin: 0;
+}
+
+.lesson-article blockquote {
+  margin: 0;
+  border-left: 4px solid var(--primary);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--accent) 45%, white);
+  color: var(--text);
+  font-weight: 850;
+  padding: 14px 18px;
+}
+
+.lesson-figure {
+  margin: 0;
+}
+
+.lesson-figure img {
+  border-radius: 14px;
+}
+
+.lesson-figure figcaption {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.lesson-point-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+}
+
 .card,
 .lesson-card,
 .sign-card,
@@ -551,8 +904,23 @@ textarea {
   }
 
   .feature-grid,
-  .metric-grid {
+  .metric-grid,
+  .curriculum-stats,
+  .outcome-grid {
     grid-template-columns: 1fr;
+  }
+
+  .curriculum-hero {
+    padding: 56px 0;
+  }
+
+  .journey-card {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .journey-action {
+    grid-column: 2;
+    width: fit-content;
   }
 
   .sidebar {
