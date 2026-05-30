@@ -1,5 +1,1 @@
-import nextConfig from "eslint-config-next";
-
-const config = [...nextConfig];
-
-export default config;
+import nextConfig from "eslint-config-next"; export default [...nextConfig];

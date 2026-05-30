@@ -3,12 +3,8 @@ import { DashboardShell } from '../components/Nav';
 import { fetchApi } from '../../lib/api';
 
 async function getLessons() {
-  try {
-    const response = await fetchApi('/lessons');
-    return response.data.parts || [];
-  } catch {
-    return [];
-  }
+  const response = await fetchApi('/lessons');
+  return response.data.parts || [];
 }
 
 export default async function StudentPage() {

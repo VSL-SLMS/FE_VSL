@@ -4,12 +4,8 @@ import { backendAssetUrl, fetchApi } from '../../../lib/api';
 import Image from 'next/image';
 
 async function getLesson(slug) {
-  try {
-    const response = await fetchApi(`/lessons/${slug}`);
-    return response.data;
-  } catch {
-    return null;
-  }
+  const response = await fetchApi(`/lessons/${slug}`);
+  return response.data;
 }
 
 export default async function LessonDetailPage({ params, searchParams }) {

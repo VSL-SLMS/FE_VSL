@@ -4,12 +4,8 @@ import { fetchApi } from '../lib/api';
 import Image from 'next/image';
 
 async function getOverview() {
-  try {
-    const response = await fetchApi('/course-overview');
-    return response.data.parts || [];
-  } catch {
-    return [];
-  }
+  const response = await fetchApi('/course-overview');
+  return response.data.parts || [];
 }
 
 export default async function Home() {

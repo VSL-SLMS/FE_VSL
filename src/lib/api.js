@@ -1,61 +1,5 @@
-const PRODUCTION_BACKEND_ORIGIN = 'https://bevsl-production.up.railway.app';
-
-const DEFAULT_BACKEND_ORIGIN =
-  process.env.NODE_ENV === 'production'
-    ? PRODUCTION_BACKEND_ORIGIN
-    : 'http://localhost:5050';
-
-function isLocalhostUrl(value) {
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(value);
-}
-
-function removeTrailingSlash(value) {
-  return value.replace(/\/+$/, '');
-}
-
-function normalizeUrlValue(value) {
-  const trimmed = String(value || '').trim();
-  if (!trimmed) return trimmed;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
-}
-
-function normalizeBackendOrigin(value) {
-  const rawValue = normalizeUrlValue(value || DEFAULT_BACKEND_ORIGIN);
-
-  if (process.env.NODE_ENV === 'production' && isLocalhostUrl(rawValue)) {
-    return PRODUCTION_BACKEND_ORIGIN;
-  }
-
-  return removeTrailingSlash(rawValue).replace(/\/api$/i, '');
-}
-
-function normalizeApiBaseUrl(value) {
-  const origin = normalizeBackendOrigin(process.env.NEXT_PUBLIC_BACKEND_ORIGIN);
-  const rawValue = normalizeUrlValue(value || `${origin}/api`);
-
-  if (process.env.NODE_ENV === 'production' && isLocalhostUrl(rawValue)) {
-    return `${PRODUCTION_BACKEND_ORIGIN}/api`;
-  }
-
-  const cleaned = removeTrailingSlash(rawValue);
-  return /\/api$/i.test(cleaned) ? cleaned : `${cleaned}/api`;
-}
-
-const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
-const BACKEND_ORIGIN = normalizeBackendOrigin(
-  process.env.NEXT_PUBLIC_BACKEND_ORIGIN || API_BASE_URL
-);
-
-export function apiUrl(path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE_URL}${normalizedPath}`;
-}
-
-function productionApiUrl(path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${PRODUCTION_BACKEND_ORIGIN}/api${normalizedPath}`;
-}
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api';
+const BACKEND_ORIGIN = process.env.NEXT_PUBLIC_BACKEND_ORIGIN || 'http://localhost:5050';
 
 export function backendAssetUrl(path) {
   if (!path) return '';
@@ -63,8 +7,8 @@ export function backendAssetUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url, {
+export async function fetchApi(path) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     cache: 'no-store'
   });
 
@@ -73,19 +17,4 @@ async function fetchJson(url) {
   }
 
   return response.json();
-}
-
-export async function fetchApi(path) {
-  const primaryUrl = apiUrl(path);
-  const fallbackUrl = productionApiUrl(path);
-
-  try {
-    return await fetchJson(primaryUrl);
-  } catch (error) {
-    if (primaryUrl === fallbackUrl) {
-      throw error;
-    }
-
-    return fetchJson(fallbackUrl);
-  }
 }

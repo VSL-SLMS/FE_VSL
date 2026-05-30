@@ -3,12 +3,8 @@ import Nav from '../components/Nav';
 import { fetchApi } from '../../lib/api';
 
 async function getLessons() {
-  try {
-    const response = await fetchApi('/lessons');
-    return response.data.parts || [];
-  } catch {
-    return [];
-  }
+  const response = await fetchApi('/lessons');
+  return response.data.parts || [];
 }
 
 export default async function LessonsPage() {
@@ -61,7 +57,7 @@ export default async function LessonsPage() {
           ))}
 
           {!parts.length && (
-            <div className="empty">No lessons returned from backend. Check the backend API connection and import the VSL database.</div>
+            <div className="empty">No lessons returned from backend. Start backend on port 5050 and import database.</div>
           )}
         </div>
       </main>
