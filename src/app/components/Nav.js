@@ -16,7 +16,7 @@ export function HomeNav() {
       </nav>
       <div className="nav-actions">
         <Link href="/login">Log in</Link>
-        <Link className="btn btn-primary" href="/register">Get started</Link>
+        <Link className="btn btn-primary" href="/login">Get started</Link>
       </div>
     </header>
   );

@@ -63,29 +63,35 @@ export function backendAssetUrl(path) {
   return `${BACKEND_ORIGIN}${path}`;
 }
 
-async function fetchJson(url) {
+async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
-    cache: 'no-store'
+    cache: 'no-store',
+    ...options,
+    headers: {
+      ...(options.headers || {})
+    }
   });
 
   if (!response.ok) {
-    throw new Error(`Backend request failed: ${response.status}`);
+    const error = new Error(`Backend request failed: ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
 }
 
-export async function fetchApi(path) {
+export async function fetchApi(path, options = {}) {
   const primaryUrl = apiUrl(path);
   const fallbackUrl = productionApiUrl(path);
 
   try {
-    return await fetchJson(primaryUrl);
+    return await fetchJson(primaryUrl, options);
   } catch (error) {
-    if (primaryUrl === fallbackUrl) {
+    if (primaryUrl === fallbackUrl || (error.status && error.status < 500)) {
       throw error;
     }
 
-    return fetchJson(fallbackUrl);
+    return fetchJson(fallbackUrl, options);
   }
 }

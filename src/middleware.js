@@ -3,17 +3,18 @@ import { NextResponse } from 'next/server';
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Protect routes that start with /student, /teacher, or /admin
   const protectedRoutes = ['/student', '/teacher', '/admin'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isProtectedLessonDetail = pathname.startsWith('/lessons/');
 
-  if (isProtectedRoute) {
+  if (isProtectedRoute || isProtectedLessonDetail) {
     const sessionCookie = request.cookies.get('slms_session');
 
     if (!sessionCookie) {
-      // Redirect to login if no session cookie exists
       const url = request.nextUrl.clone();
+      const redirectTo = `${pathname}${request.nextUrl.search}`;
       url.pathname = '/login';
+      url.search = `?redirect=${encodeURIComponent(redirectTo)}`;
       return NextResponse.redirect(url);
     }
   }
@@ -22,5 +23,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/student/:path*', '/teacher/:path*', '/admin/:path*'],
+  matcher: ['/student/:path*', '/teacher/:path*', '/admin/:path*', '/lessons/:path*'],
 };

@@ -2,12 +2,40 @@ import Link from 'next/link';
 import Nav from '../../components/Nav';
 import { backendAssetUrl, fetchApi } from '../../../lib/api';
 import Image from 'next/image';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-async function getLesson(slug) {
+async function getSessionUser() {
+  const cookieStore = await cookies();
+  const rawSession = cookieStore.get('slms_session')?.value;
+
+  if (!rawSession) return null;
+
   try {
-    const response = await fetchApi(`/lessons/${slug}`);
-    return response.data;
+    return JSON.parse(rawSession);
   } catch {
+    return null;
+  }
+}
+
+function buildLoginUrl(slug, mode) {
+  const lessonPath = `/lessons/${slug}${mode === 'book' ? '?mode=book' : ''}`;
+  return `/login?redirect=${encodeURIComponent(lessonPath)}`;
+}
+
+async function getLesson(slug, token) {
+  try {
+    const response = await fetchApi(`/lessons/${slug}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      throw error;
+    }
+
     return null;
   }
 }
@@ -15,8 +43,20 @@ async function getLesson(slug) {
 export default async function LessonDetailPage({ params, searchParams }) {
   const { slug } = await params;
   const query = await searchParams;
-  const data = await getLesson(slug);
   const mode = query?.mode === 'book' ? 'book' : 'learn';
+  const user = await getSessionUser();
+
+  if (!user?.token) {
+    redirect(buildLoginUrl(slug, mode));
+  }
+
+  let data = null;
+
+  try {
+    data = await getLesson(slug, user.token);
+  } catch {
+    redirect(buildLoginUrl(slug, mode));
+  }
 
   if (!data) {
     return (

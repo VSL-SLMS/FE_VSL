@@ -5,6 +5,16 @@ import { useState } from 'react';
 import { loginAction } from '../actions/auth';
 import toast from 'react-hot-toast';
 
+function getRedirectTarget(fallback) {
+  const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+
+  if (!redirectTo || !redirectTo.startsWith('/') || redirectTo.startsWith('//')) {
+    return fallback;
+  }
+
+  return redirectTo;
+}
+
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +33,7 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       toast.success('Login successful!');
-      window.location.href = `/${result.user.role.toLowerCase()}`;
+      window.location.href = getRedirectTarget(`/${result.user.role.toLowerCase()}`);
     }
   }
 
