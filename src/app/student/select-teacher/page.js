@@ -19,6 +19,7 @@ export default function SelectTeacherPage() {
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [message, setMessage] = useState(() =>
     currentUser?.token ? 'Loading teachers...' : 'Student login is required.'
   );
@@ -52,6 +53,7 @@ export default function SelectTeacherPage() {
 
   const hasTeacher = Boolean(dashboard?.student?.teacher_id);
   const pendingRequest = dashboard?.teacherChangeRequests?.find((request) => request.status === 'PENDING');
+  const hasPendingRequest = Boolean(pendingRequest || requestSubmitted);
 
   async function submitSelection(teacherId) {
     if (!currentUser?.token || loading) return;
@@ -80,9 +82,12 @@ export default function SelectTeacherPage() {
 
       setMessage(
         hasTeacher
-          ? 'Teacher change request submitted. If Admin approves it, your current Teacher will be cleared and you can choose a new Teacher.'
+          ? payload.data?.alreadyPending
+            ? 'Your teacher change request is already pending Admin approval.'
+            : 'Teacher change request submitted. If Admin approves it, your current Teacher will be cleared and you can choose a new Teacher.'
           : 'Teacher selected successfully. Lessons are now unlocked.'
       );
+      if (hasTeacher) setRequestSubmitted(true);
       setSelectedTeacherId('');
       setReason('');
       if (!hasTeacher) router.push('/student');
@@ -106,7 +111,7 @@ export default function SelectTeacherPage() {
             <p className="muted">
               Admin approval will remove your current Teacher assignment. After approval, return here to choose a new Teacher.
             </p>
-            {pendingRequest && (
+            {hasPendingRequest && (
               <div className="empty">
                 Your teacher change request is pending Admin approval.
               </div>
@@ -117,7 +122,7 @@ export default function SelectTeacherPage() {
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="Explain why you want to change Teacher..."
-                disabled={Boolean(pendingRequest)}
+                disabled={hasPendingRequest}
                 required
               />
             </div>
@@ -125,10 +130,10 @@ export default function SelectTeacherPage() {
               <button
                 className="btn btn-primary"
                 type="button"
-                disabled={loading || Boolean(pendingRequest) || !reason.trim()}
+                disabled={loading || hasPendingRequest || !reason.trim()}
                 onClick={() => submitSelection(null)}
               >
-                {pendingRequest ? 'Waiting for Admin' : loading ? 'Submitting...' : 'Send request to Admin'}
+                {hasPendingRequest ? 'Waiting for Admin' : loading ? 'Submitting...' : 'Send request to Admin'}
               </button>
             </div>
           </section>
