@@ -59,7 +59,7 @@ export function HomeNav() {
         <Link href="/#who">For you</Link>
         <Link href="/curriculum">Curriculum</Link>
       </nav>
-      <div className="nav-actions">
+      <div className="nav-actions" suppressHydrationWarning>
         {currentUser ? (
           <>
             <Link href={getDashboardHref(currentUser)}>

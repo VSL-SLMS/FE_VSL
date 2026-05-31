@@ -97,7 +97,7 @@ export default function CreateTeacherPage() {
         {createdTeacher && (
           <div className="modal-backdrop" role="presentation">
             <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="teacher-created-title">
-              <span className="pill">Teacher created</span>
+              <span className="pill">{createdTeacher.temporary_password_reset ? 'Temporary password reset' : 'Teacher created'}</span>
               <h2 id="teacher-created-title">Teacher account is ready</h2>
               <p className="muted">
                 {createdTeacher.email} can now log in with the temporary password and must change password on first login.
