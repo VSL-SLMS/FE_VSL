@@ -88,7 +88,41 @@ export default async function LessonDetailPage({ params, searchParams }) {
     );
   }
 
-  const { lesson, content, pages, navigation } = data;
+  const { lesson, content, pages, navigation, hasAccess } = data;
+
+  if (hasAccess === false) {
+    return (
+      <>
+        <Nav />
+        <main className="page" style={{ maxWidth: 760 }}>
+          <header className="page-head" style={{ marginBottom: 32 }}>
+            <div>
+              <Link className="muted" href="/lessons">All lessons</Link>
+              <h1 style={{ marginTop: 8 }}>{lesson.title}</h1>
+              <p className="muted" style={{ fontWeight: 800, marginTop: 4 }}>{lesson.part_title} / {lesson.chapter_title}</p>
+            </div>
+          </header>
+
+          <div className="card center stack" style={{ padding: '54px 36px', borderTop: '6px solid var(--primary)', alignItems: 'center' }}>
+            <span style={{ fontSize: 64 }}>🔒</span>
+            <h2 style={{ fontSize: 26, margin: '18px 0 8px', fontWeight: 900 }}>Bài Học Giới Hạn</h2>
+            <p className="muted" style={{ maxWidth: 500, margin: '0 auto 28px', lineHeight: 1.6, fontWeight: 800 }}>
+              Bài học này chỉ dành cho học viên đã mua khóa học. Hãy tham gia cùng hàng ngàn học viên khác mở khóa trọn đời toàn bộ 28 bài học của SignLearn ngay hôm nay!
+            </p>
+            
+            <div className="stack" style={{ gap: 14, margin: '0 auto', maxWidth: 320, width: '100%' }}>
+              <Link href="/payment" className="btn btn-primary" style={{ width: '100%', minHeight: 46 }}>
+                Mua khóa học ngay (299.000đ)
+              </Link>
+              <Link href="/lessons" className="btn" style={{ width: '100%', minHeight: 46 }}>
+                Quay lại danh sách bài học
+              </Link>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "settings": {
+    "serverAuthFunctionNames": ["getSessionUser"]
+  },
+  "rules": {
+    "jsx-a11y/aria-role": "off"
+  },
+  "ignore": {
+    "overrides": [
+      {
+        "files": ["src/app/actions/auth.js"],
+        "rules": ["react-doctor/server-auth-actions"]
+      },
+      {
+        "files": ["src/app/actions/payment.js"],
+        "rules": ["react-doctor/server-auth-actions"]
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@ export default function StudentLessonsPage() {
   const [currentUser] = useState(() => readStoredUser('STUDENT'));
   const [parts, setParts] = useState([]);
   const [hasTeacher, setHasTeacher] = useState(false);
+  const [hasCourseAccess, setHasCourseAccess] = useState(false);
   const [message, setMessage] = useState(() =>
     currentUser?.token ? 'Loading lessons...' : 'Student login is required.'
   );
@@ -29,13 +30,25 @@ export default function StudentLessonsPage() {
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.message || 'Could not load lessons.');
         return payload.data.parts || [];
+      }),
+      fetch(apiUrl('/course-access/me'), {
+        headers: { Authorization: `Bearer ${currentUser.token}` }
+      }).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load course access.');
+        return Boolean(payload.data?.hasAccess);
       })
     ])
-      .then(([dashboard, lessonParts]) => {
+      .then(([dashboard, lessonParts, courseAccess]) => {
         const teacherSelected = Boolean(dashboard?.student?.teacher_id);
         setHasTeacher(teacherSelected);
+        setHasCourseAccess(courseAccess);
         setParts(teacherSelected ? lessonParts : []);
-        setMessage(teacherSelected ? '' : 'Choose a Teacher before accessing lessons.');
+        if (!teacherSelected) {
+          setMessage('Choose a Teacher before accessing lessons.');
+          return;
+        }
+        setMessage(courseAccess ? '' : 'Purchase the course to unlock full lesson content.');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
   }, [currentUser]);
@@ -47,6 +60,7 @@ export default function StudentLessonsPage() {
           <div className="empty">
             {message}
             {!hasTeacher && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/student/select-teacher">Select teacher</Link></div>}
+            {hasTeacher && !hasCourseAccess && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/payment">Purchase course</Link></div>}
           </div>
         )}
 
@@ -69,6 +83,7 @@ export default function StudentLessonsPage() {
                       <span className="pill">{lesson.lesson_type}</span>
                       <h3>{lesson.title}</h3>
                       <p className="muted">{lesson.estimated_minutes || 15} min</p>
+                      {!hasCourseAccess && <span className="pill">Locked</span>}
                     </Link>
                   ))}
                 </div>
