@@ -14,13 +14,15 @@ export default function AdminTeacherChangeRequestsPage() {
   const [currentUser] = useState(readCurrentUser);
   const [requests, setRequests] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
-  const [message, setMessage] = useState('Loading teacher change requests...');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading teacher change requests...' : 'Admin login is required.'
+  );
 
-  function loadRequests() {
-    if (!currentUser?.token) {
-      setMessage('Admin login is required.');
-      return;
-    }
+  useEffect(() => {
+    if (!currentUser?.token) return;
+
+    let cancelled = false;
 
     fetch(apiUrl('/admin/teacher-change-requests'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -28,13 +30,19 @@ export default function AdminTeacherChangeRequestsPage() {
       .then(async (response) => {
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.message || 'Could not load requests.');
-        setRequests(payload.data.requests || []);
-        setMessage('');
+        if (!cancelled) {
+          setRequests(payload.data.requests || []);
+          setMessage('');
+        }
       })
-      .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }
+      .catch((error) => {
+        if (!cancelled) setMessage(error.message || 'Backend is offline.');
+      });
 
-  useEffect(loadRequests, [currentUser]);
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, refreshKey]);
 
   async function reviewRequest(id, status) {
     if (!currentUser?.token || loadingId) return;
@@ -52,7 +60,7 @@ export default function AdminTeacherChangeRequestsPage() {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.message || 'Could not review request.');
-      loadRequests();
+      setRefreshKey((value) => value + 1);
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
     } finally {

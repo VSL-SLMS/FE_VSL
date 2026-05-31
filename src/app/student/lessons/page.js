@@ -15,13 +15,12 @@ export default function StudentLessonsPage() {
   const [currentUser] = useState(readCurrentUser);
   const [parts, setParts] = useState([]);
   const [hasTeacher, setHasTeacher] = useState(false);
-  const [message, setMessage] = useState('Loading lessons...');
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading lessons...' : 'Student login is required.'
+  );
 
   useEffect(() => {
-    if (!currentUser?.token) {
-      setMessage('Student login is required.');
-      return;
-    }
+    if (!currentUser?.token) return;
 
     Promise.all([
       fetch(apiUrl('/student/dashboard'), {

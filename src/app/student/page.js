@@ -14,13 +14,12 @@ function readCurrentUser() {
 export default function StudentPage() {
   const [currentUser] = useState(readCurrentUser);
   const [dashboard, setDashboard] = useState(null);
-  const [message, setMessage] = useState('Loading dashboard...');
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading dashboard...' : 'Student login is required.'
+  );
 
   useEffect(() => {
-    if (!currentUser?.token) {
-      setMessage('Student login is required.');
-      return;
-    }
+    if (!currentUser?.token) return;
 
     fetch(apiUrl('/student/dashboard'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }

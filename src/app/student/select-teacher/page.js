@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
 
@@ -11,19 +12,19 @@ function readCurrentUser() {
 }
 
 export default function SelectTeacherPage() {
+  const router = useRouter();
   const [currentUser] = useState(readCurrentUser);
   const [teachers, setTeachers] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('Loading teachers...');
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading teachers...' : 'Student login is required.'
+  );
 
   useEffect(() => {
-    if (!currentUser?.token) {
-      setMessage('Student login is required.');
-      return;
-    }
+    if (!currentUser?.token) return;
 
     Promise.all([
       fetch(apiUrl('/teachers'), {
@@ -83,7 +84,7 @@ export default function SelectTeacherPage() {
       );
       setSelectedTeacherId('');
       setReason('');
-      if (!hasTeacher) window.location.href = '/student';
+      if (!hasTeacher) router.push('/student');
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
     } finally {
