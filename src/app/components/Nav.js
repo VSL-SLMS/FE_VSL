@@ -1,7 +1,52 @@
+'use client';
+
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
+import { useMemo, useSyncExternalStore } from 'react';
+import { logoutAction } from '../actions/auth';
+import { removeStoredUser } from '../../lib/authStorage';
+
+function getDashboardHref(user) {
+  if (!user?.role) return '/login';
+  return `/${String(user.role).toLowerCase()}`;
+}
+
+function subscribeAuth(callback) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  window.addEventListener('slms-auth-changed', callback);
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener('slms-auth-changed', callback);
+  };
+}
+
+function getAuthSnapshot() {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('slms_user') || '';
+}
+
+function getServerAuthSnapshot() {
+  return '';
+}
 
 export function HomeNav() {
+  const authSnapshot = useSyncExternalStore(subscribeAuth, getAuthSnapshot, getServerAuthSnapshot);
+  const currentUser = useMemo(() => {
+    if (!authSnapshot) return null;
+    try {
+      return JSON.parse(authSnapshot);
+    } catch {
+      return null;
+    }
+  }, [authSnapshot]);
+
+  async function handleLogout() {
+    await logoutAction();
+    removeStoredUser();
+    window.location.href = '/login';
+  }
+
   return (
     <header className="home-nav">
       <Link href="/" className="brand">
@@ -15,8 +60,21 @@ export function HomeNav() {
         <Link href="/curriculum">Curriculum</Link>
       </nav>
       <div className="nav-actions">
-        <Link href="/login">Log in</Link>
-        <Link className="btn btn-primary" href="/register">Register</Link>
+        {currentUser ? (
+          <>
+            <Link href={getDashboardHref(currentUser)}>
+              {currentUser.display_name || currentUser.name || currentUser.username || 'Dashboard'}
+            </Link>
+            <button className="btn" type="button" onClick={handleLogout}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login">Log in</Link>
+            <Link className="btn btn-primary" href="/register">Register</Link>
+          </>
+        )}
       </div>
     </header>
   );

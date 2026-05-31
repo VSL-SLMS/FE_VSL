@@ -24,6 +24,7 @@ export function writeStoredUser(user) {
   if (typeof window === 'undefined' || !user) return;
   localStorage.setItem('slms_user', JSON.stringify(user));
   localStorage.setItem(roleKey(user.role), JSON.stringify(user));
+  window.dispatchEvent(new Event('slms-auth-changed'));
 }
 
 export function removeStoredUser() {
@@ -31,4 +32,5 @@ export function removeStoredUser() {
   const user = readStoredUser();
   if (user?.role) localStorage.removeItem(roleKey(user.role));
   localStorage.removeItem('slms_user');
+  window.dispatchEvent(new Event('slms-auth-changed'));
 }
