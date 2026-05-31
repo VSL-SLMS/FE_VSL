@@ -116,26 +116,29 @@ export default function SelectTeacherPage() {
                 Your teacher change request is pending Admin approval.
               </div>
             )}
-            <div className="field">
-              <label>Reason for change request</label>
-              <textarea
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder="Explain why you want to change Teacher..."
-                disabled={hasPendingRequest}
-                required
-              />
-            </div>
-            <div className="actions">
-              <button
-                className="btn btn-primary"
-                type="button"
-                disabled={loading || hasPendingRequest || !reason.trim()}
-                onClick={() => submitSelection(null)}
-              >
-                {hasPendingRequest ? 'Waiting for Admin' : loading ? 'Submitting...' : 'Send request to Admin'}
-              </button>
-            </div>
+            {!hasPendingRequest && (
+              <>
+                <div className="field">
+                  <label>Reason for change request</label>
+                  <textarea
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    placeholder="Explain why you want to change Teacher..."
+                    required
+                  />
+                </div>
+                <div className="actions">
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    disabled={loading || !reason.trim()}
+                    onClick={() => submitSelection(null)}
+                  >
+                    {loading ? 'Submitting...' : 'Send request to Admin'}
+                  </button>
+                </div>
+              </>
+            )}
           </section>
         )}
 

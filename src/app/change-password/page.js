@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
 
 export default function ChangePasswordPage() {
+  const router = useRouter();
   const [message, setMessage] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [user] = useState(() => {
     if (typeof window === 'undefined') return null;
     const raw = localStorage.getItem('slms_user');
@@ -14,9 +17,30 @@ export default function ChangePasswordPage() {
 
   useEffect(() => {
     if (!user) {
-      window.location.href = '/login';
+      router.push('/login');
     }
-  }, [user]);
+  }, [router, user]);
+
+  async function requestOtp() {
+    if (!user?.token) return;
+    setMessage('Sending OTP...');
+
+    const response = await fetch(apiUrl('/auth/change-password/request-otp'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+      setMessage(payload.message || 'Could not send OTP.');
+      return;
+    }
+
+    setOtpSent(true);
+    setMessage('OTP sent to your email. It expires in 10 minutes.');
+  }
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -38,7 +62,8 @@ export default function ChangePasswordPage() {
       },
       body: JSON.stringify({
         currentPassword: form.get('currentPassword'),
-        newPassword
+        newPassword,
+        otp: form.get('otp')
       })
     });
 
@@ -49,7 +74,7 @@ export default function ChangePasswordPage() {
     }
 
     localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
-    window.location.href = `/${payload.data.user.role.toLowerCase()}`;
+    router.push(`/${payload.data.user.role.toLowerCase()}`);
   }
 
   return (
@@ -57,9 +82,13 @@ export default function ChangePasswordPage() {
       <section className="auth-panel">
         <Link href="/" className="brand"><span className="brand-mark">✦</span><span>SignLearn</span></Link>
         <h1>Change password</h1>
-        <p className="muted">Teacher accounts created by Admin must change their temporary password before using the dashboard.</p>
+        <p className="muted">Password changes require an OTP sent to your account email.</p>
+        <button className="btn" type="button" onClick={requestOtp}>
+          {otpSent ? 'Send OTP again' : 'Send OTP'}
+        </button>
         <form className="form-grid" onSubmit={onSubmit}>
           <div className="field"><label>Current password</label><input name="currentPassword" type="password" required /></div>
+          <div className="field"><label>Email OTP</label><input name="otp" inputMode="numeric" minLength="6" maxLength="6" required /></div>
           <div className="field"><label>New password</label><input name="newPassword" type="password" minLength="6" required /></div>
           <div className="field"><label>Confirm password</label><input name="confirmPassword" type="password" minLength="6" required /></div>
           <button className="btn btn-primary" type="submit">Update password</button>
