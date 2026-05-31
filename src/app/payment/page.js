@@ -16,6 +16,12 @@ export default function PaymentPricingPage() {
   const [user] = useState(() => readStoredUser('STUDENT'));
 
   useEffect(() => {
+    if (!user) {
+      router.replace(`/login?redirect=${encodeURIComponent('/payment')}`);
+    }
+  }, [router, user]);
+
+  useEffect(() => {
     async function fetchPricing() {
       try {
         const res = await getPricingAction();
@@ -71,6 +77,16 @@ export default function PaymentPricingPage() {
     <>
       <Nav />
       <main className="page" style={{ maxWidth: 860 }}>
+        {!user ? (
+          <div className="card center stack" style={{ padding: '60px 24px', marginTop: 60 }}>
+            <h1>Login required</h1>
+            <p className="muted">Please log in with a Student account before purchasing the course.</p>
+            <Link href={`/login?redirect=${encodeURIComponent('/payment')}`} className="btn btn-primary">
+              Log in to continue
+            </Link>
+          </div>
+        ) : (
+          <>
         <div className="center" style={{ margin: '40px 0 20px' }}>
           <span className="eyebrow">Cổng Thanh Toán</span>
           <h1 style={{ fontSize: 'clamp(28px, 4vw, 42px)', margin: '12px 0' }}>Mở Khóa Toàn Bộ Khóa Học</h1>
@@ -151,6 +167,8 @@ export default function PaymentPricingPage() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </main>
     </>
