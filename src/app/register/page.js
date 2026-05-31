@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { registerAction } from '../actions/auth';
 import toast from 'react-hot-toast';
+import { writeStoredUser } from '../../lib/authStorage';
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ export default function RegisterPage() {
       setLoading(false);
     } else {
       toast.success('Registration successful!');
-      localStorage.setItem('slms_user', JSON.stringify(result.user));
+      writeStoredUser(result.user);
       window.location.href = `/${result.user.role.toLowerCase()}`;
     }
   }

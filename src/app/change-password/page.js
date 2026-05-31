@@ -4,16 +4,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
+import { readStoredUser, writeStoredUser } from '../../lib/authStorage';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
   const [message, setMessage] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [user] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    const raw = localStorage.getItem('slms_user');
-    return raw ? JSON.parse(raw) : null;
-  });
+  const [user] = useState(() => readStoredUser());
 
   useEffect(() => {
     if (!user) {
@@ -73,7 +70,7 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    localStorage.setItem('slms_user', JSON.stringify(payload.data.user));
+    writeStoredUser(payload.data.user);
     router.push(`/${payload.data.user.role.toLowerCase()}`);
   }
 

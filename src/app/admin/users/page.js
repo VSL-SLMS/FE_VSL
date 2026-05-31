@@ -4,20 +4,14 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
+import { readStoredUser } from '../../../lib/authStorage';
 
 export default function AdminUsersPage() {
-  const [currentUser] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    const rawUser = localStorage.getItem('slms_user');
-    return rawUser ? JSON.parse(rawUser) : null;
-  });
+  const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState(() => {
-    if (typeof window === 'undefined') return 'Loading users...';
-    const rawUser = localStorage.getItem('slms_user');
-    if (!rawUser) return 'Admin login is required.';
-    const parsedUser = JSON.parse(rawUser);
-    return parsedUser.role === 'ADMIN' ? 'Loading users...' : 'Only Admin can view user management.';
+    const storedAdmin = readStoredUser('ADMIN');
+    return storedAdmin?.token ? 'Loading users...' : 'Admin login is required.';
   });
 
   useEffect(() => {

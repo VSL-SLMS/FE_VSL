@@ -4,15 +4,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-
-function readCurrentUser() {
-  if (typeof window === 'undefined') return null;
-  const rawUser = localStorage.getItem('slms_user');
-  return rawUser ? JSON.parse(rawUser) : null;
-}
+import { readStoredUser } from '../../../lib/authStorage';
 
 export default function StudentLessonsPage() {
-  const [currentUser] = useState(readCurrentUser);
+  const [currentUser] = useState(() => readStoredUser('STUDENT'));
   const [parts, setParts] = useState([]);
   const [hasTeacher, setHasTeacher] = useState(false);
   const [message, setMessage] = useState(() =>

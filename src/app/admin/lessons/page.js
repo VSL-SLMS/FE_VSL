@@ -3,12 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-
-function readCurrentUser() {
-  if (typeof window === 'undefined') return null;
-  const rawUser = localStorage.getItem('slms_user');
-  return rawUser ? JSON.parse(rawUser) : null;
-}
+import { readStoredUser } from '../../../lib/authStorage';
 
 function flattenLessons(parts) {
   return parts.flatMap((part) =>
@@ -23,7 +18,7 @@ function flattenLessons(parts) {
 }
 
 export default function AdminLessonsPage() {
-  const [currentUser] = useState(readCurrentUser);
+  const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [parts, setParts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState(() =>

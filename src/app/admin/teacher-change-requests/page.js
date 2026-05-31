@@ -3,15 +3,10 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-
-function readCurrentUser() {
-  if (typeof window === 'undefined') return null;
-  const rawUser = localStorage.getItem('slms_user');
-  return rawUser ? JSON.parse(rawUser) : null;
-}
+import { readStoredUser } from '../../../lib/authStorage';
 
 export default function AdminTeacherChangeRequestsPage() {
-  const [currentUser] = useState(readCurrentUser);
+  const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [requests, setRequests] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);

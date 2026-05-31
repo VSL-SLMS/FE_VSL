@@ -1,10 +1,12 @@
 'use client';
 
 import { logoutAction } from '../actions/auth';
+import { removeStoredUser } from '../../lib/authStorage';
 
 export default function LogoutButton() {
   async function handleLogout() {
     await logoutAction();
+    removeStoredUser();
     window.location.href = '/login';
   }
 

@@ -4,21 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
+import { readStoredUser } from '../../../../lib/authStorage';
 
 export default function CreateTeacherPage() {
   const [loading, setLoading] = useState(false);
   const [createdTeacher, setCreatedTeacher] = useState(null);
-  const [currentUser] = useState(() => {
-    if (typeof window === 'undefined') return null;
-    const rawUser = localStorage.getItem('slms_user');
-    return rawUser ? JSON.parse(rawUser) : null;
-  });
+  const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [message, setMessage] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    const rawUser = localStorage.getItem('slms_user');
-    if (!rawUser) return 'Admin login is required.';
-    const parsedUser = JSON.parse(rawUser);
-    return parsedUser.role === 'ADMIN' ? '' : 'Only Admin can create teacher accounts.';
+    const storedAdmin = readStoredUser('ADMIN');
+    return storedAdmin?.token ? '' : 'Admin login is required.';
   });
 
   async function onSubmit(event) {

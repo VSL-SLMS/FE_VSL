@@ -4,15 +4,10 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../components/Nav';
 import { apiUrl, fetchApi } from '../../lib/api';
-
-function readCurrentUser() {
-  if (typeof window === 'undefined') return null;
-  const rawUser = localStorage.getItem('slms_user');
-  return rawUser ? JSON.parse(rawUser) : null;
-}
+import { readStoredUser } from '../../lib/authStorage';
 
 export default function AdminPage() {
-  const [currentUser] = useState(readCurrentUser);
+  const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [lessonCount, setLessonCount] = useState(0);
   const [teacherRequests, setTeacherRequests] = useState([]);
   const [message, setMessage] = useState(() =>
