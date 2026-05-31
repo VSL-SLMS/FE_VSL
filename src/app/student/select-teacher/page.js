@@ -51,6 +51,7 @@ export default function SelectTeacherPage() {
   }, [currentUser]);
 
   const hasTeacher = Boolean(dashboard?.student?.teacher_id);
+  const pendingRequest = dashboard?.teacherChangeRequests?.find((request) => request.status === 'PENDING');
 
   async function submitSelection(teacherId) {
     if (!currentUser?.token || loading) return;
@@ -68,7 +69,7 @@ export default function SelectTeacherPage() {
           },
           body: JSON.stringify(
             hasTeacher
-              ? { requestedTeacherId: teacherId, reason }
+              ? { reason }
               : { teacherId }
           )
         }
@@ -79,7 +80,7 @@ export default function SelectTeacherPage() {
 
       setMessage(
         hasTeacher
-          ? 'Teacher change request submitted. Admin approval is required before the change takes effect.'
+          ? 'Teacher change request submitted. If Admin approves it, your current Teacher will be cleared and you can choose a new Teacher.'
           : 'Teacher selected successfully. Lessons are now unlocked.'
       );
       setSelectedTeacherId('');
@@ -102,19 +103,38 @@ export default function SelectTeacherPage() {
             <span className="eyebrow">Current Teacher</span>
             <h2>{dashboard.student.teacher_name}</h2>
             <p className="muted">{dashboard.student.teacher_email}</p>
+            <p className="muted">
+              Admin approval will remove your current Teacher assignment. After approval, return here to choose a new Teacher.
+            </p>
+            {pendingRequest && (
+              <div className="empty">
+                Your teacher change request is pending Admin approval.
+              </div>
+            )}
             <div className="field">
               <label>Reason for change request</label>
               <textarea
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="Explain why you want to change Teacher..."
+                disabled={Boolean(pendingRequest)}
                 required
               />
+            </div>
+            <div className="actions">
+              <button
+                className="btn btn-primary"
+                type="button"
+                disabled={loading || Boolean(pendingRequest) || !reason.trim()}
+                onClick={() => submitSelection(null)}
+              >
+                {pendingRequest ? 'Waiting for Admin' : loading ? 'Submitting...' : 'Send request to Admin'}
+              </button>
             </div>
           </section>
         )}
 
-        <div className="role-grid">
+        {!hasTeacher && <div className="role-grid">
           {teachers.map((teacher) => {
             const isCurrentTeacher = Number(teacher.id) === Number(dashboard?.student?.teacher_id);
             return (
@@ -140,7 +160,7 @@ export default function SelectTeacherPage() {
           {!teachers.length && !message && (
             <div className="empty">No teacher account exists yet. Ask Admin to create a teacher account first.</div>
           )}
-        </div>
+        </div>}
       </div>
     </DashboardShell>
   );

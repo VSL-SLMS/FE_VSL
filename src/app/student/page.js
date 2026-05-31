@@ -87,7 +87,7 @@ export default function StudentPage() {
             {dashboard.teacherChangeRequests.map((request) => (
               <div className="user-row" key={request.id}>
                 <div>
-                  <strong>{request.requested_teacher_name}</strong>
+                  <strong>{request.requested_teacher_name || 'Teacher change approval'}</strong>
                   <p className="muted">{request.reason}</p>
                 </div>
                 <span className="pill">{request.status}</span>

@@ -78,7 +78,7 @@ export default function AdminTeacherChangeRequestsPage() {
             <div>
               <strong>{request.student_name}</strong>
               <p className="muted">
-                {request.student_email} · {request.current_teacher_name || 'No current teacher'} → {request.requested_teacher_name}
+                {request.student_email} · {request.current_teacher_name || 'No current teacher'} → {request.requested_teacher_name || 'Student will choose again'}
               </p>
               <p className="muted">{request.reason}</p>
             </div>
