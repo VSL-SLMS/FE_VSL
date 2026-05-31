@@ -9,6 +9,8 @@ import { readStoredUser } from '../../../lib/authStorage';
 export default function AdminUsersPage() {
   const [currentUser] = useState(() => readStoredUser('ADMIN'));
   const [users, setUsers] = useState([]);
+  const [teacherAccounts, setTeacherAccounts] = useState([]);
+  const [updatingTeacherId, setUpdatingTeacherId] = useState(null);
   const [message, setMessage] = useState(() => {
     const storedAdmin = readStoredUser('ADMIN');
     return storedAdmin?.token ? 'Loading users...' : 'Admin login is required.';
@@ -23,17 +25,29 @@ export default function AdminUsersPage() {
       return;
     }
 
-    fetch(apiUrl('/admin/users'), {
-      headers: {
-        Authorization: `Bearer ${currentUser.token}`
-      }
-    })
-      .then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) {
-          throw new Error(payload.message || 'Could not load users.');
+    Promise.all([
+      fetch(apiUrl('/admin/users'), {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`
         }
-        setUsers(payload.data.users || []);
+      }).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load users.');
+        return payload.data.users || [];
+      }),
+      fetch(apiUrl('/admin/teachers'), {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`
+        }
+      }).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load teachers.');
+        return payload.data.teachers || [];
+      })
+    ])
+      .then(([userRows, teacherRows]) => {
+        setUsers(userRows);
+        setTeacherAccounts(teacherRows);
         setMessage('');
       })
       .catch((error) => {
@@ -41,7 +55,40 @@ export default function AdminUsersPage() {
       });
   }, [currentUser]);
 
-  const teachers = users.filter((user) => user.role === 'TEACHER');
+  async function updateTeacherStatus(teacher, status) {
+    if (!currentUser?.token || updatingTeacherId) return;
+
+    setUpdatingTeacherId(teacher.id);
+    try {
+      const response = await fetch(apiUrl(`/admin/teachers/${teacher.id}/status`), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Could not update teacher status.');
+
+      setTeacherAccounts((items) =>
+        items.map((item) => (item.id === teacher.id ? payload.data.teacher : item))
+      );
+      setUsers((items) =>
+        items.map((item) =>
+          item.id === payload.data.teacher.user_id
+            ? { ...item, status: payload.data.teacher.status }
+            : item
+        )
+      );
+      setMessage('');
+    } catch (error) {
+      setMessage(error.message || 'Backend is offline.');
+    } finally {
+      setUpdatingTeacherId(null);
+    }
+  }
+
   const students = users.filter((user) => user.role === 'STUDENT');
   const admins = users.filter((user) => user.role === 'ADMIN');
 
@@ -59,6 +106,33 @@ export default function AdminUsersPage() {
           <span className="pill">{user.role}</span>
           <span className="pill">{user.status}</span>
           {user.must_change_password ? <span className="pill">Password change required</span> : null}
+        </div>
+      </div>
+    );
+  }
+
+  function renderTeacher(teacher) {
+    const nextStatus = teacher.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    return (
+      <div className="card user-row" style={{ boxShadow: 'none' }} key={teacher.id}>
+        <div>
+          <strong>{teacher.display_name || teacher.email}</strong>
+          <p className="muted">
+            {teacher.email} · Accuracy: {teacher.accuracy ?? 100}%
+          </p>
+        </div>
+        <div className="user-badges">
+          <span className="pill">TEACHER</span>
+          <span className="pill">{teacher.status}</span>
+          {teacher.must_change_password ? <span className="pill">Password change required</span> : null}
+          <button
+            className="btn"
+            type="button"
+            onClick={() => updateTeacherStatus(teacher, nextStatus)}
+            disabled={updatingTeacherId === teacher.id}
+          >
+            {updatingTeacherId === teacher.id ? 'Saving...' : nextStatus === 'SUSPENDED' ? 'Suspend' : 'Activate'}
+          </button>
         </div>
       </div>
     );
@@ -87,9 +161,9 @@ export default function AdminUsersPage() {
         {!message && (
           <>
             <section className="stack">
-              <div className="page-title"><h2>Teachers ({teachers.length})</h2></div>
-              {teachers.map(renderUser)}
-              {!teachers.length && <div className="empty">No teachers found.</div>}
+              <div className="page-title"><h2>Teachers ({teacherAccounts.length})</h2></div>
+              {teacherAccounts.map(renderTeacher)}
+              {!teacherAccounts.length && <div className="empty">No teachers found.</div>}
             </section>
 
             <section className="stack">

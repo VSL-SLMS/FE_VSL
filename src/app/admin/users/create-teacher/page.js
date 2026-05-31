@@ -102,6 +102,11 @@ export default function CreateTeacherPage() {
               <p className="muted">
                 {createdTeacher.email} can now log in with the temporary password and must change password on first login.
               </p>
+              {createdTeacher.email_delivery?.sent ? (
+                <p className="muted">Temporary password email was sent.</p>
+              ) : (
+                <p className="muted">SMTP email was not sent. Share the temporary password manually.</p>
+              )}
               <div className="actions">
                 <button className="btn btn-primary" type="button" onClick={() => setCreatedTeacher(null)}>Create another</button>
                 <Link className="btn" href="/admin/users">View users</Link>
