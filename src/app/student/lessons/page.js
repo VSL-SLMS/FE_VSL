@@ -1,23 +1,62 @@
-import Link from 'next/link';
-import { DashboardShell } from '../../components/Nav';
-import { fetchApi } from '../../../lib/api';
+'use client';
 
-async function getParts() {
-  try {
-    const response = await fetchApi('/lessons');
-    return response.data.parts || [];
-  } catch {
-    return [];
-  }
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { DashboardShell } from '../../components/Nav';
+import { apiUrl } from '../../../lib/api';
+
+function readCurrentUser() {
+  if (typeof window === 'undefined') return null;
+  const rawUser = localStorage.getItem('slms_user');
+  return rawUser ? JSON.parse(rawUser) : null;
 }
 
-export default async function StudentLessonsPage() {
-  const parts = await getParts();
+export default function StudentLessonsPage() {
+  const [currentUser] = useState(readCurrentUser);
+  const [parts, setParts] = useState([]);
+  const [hasTeacher, setHasTeacher] = useState(false);
+  const [message, setMessage] = useState('Loading lessons...');
+
+  useEffect(() => {
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return;
+    }
+
+    Promise.all([
+      fetch(apiUrl('/student/dashboard'), {
+        headers: { Authorization: `Bearer ${currentUser.token}` }
+      }).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load student profile.');
+        return payload.data;
+      }),
+      fetch(apiUrl('/lessons')).then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load lessons.');
+        return payload.data.parts || [];
+      })
+    ])
+      .then(([dashboard, lessonParts]) => {
+        const teacherSelected = Boolean(dashboard?.student?.teacher_id);
+        setHasTeacher(teacherSelected);
+        setParts(teacherSelected ? lessonParts : []);
+        setMessage(teacherSelected ? '' : 'Choose a Teacher before accessing lessons.');
+      })
+      .catch((error) => setMessage(error.message || 'Backend is offline.'));
+  }, [currentUser]);
 
   return (
     <DashboardShell role="student" title="Lessons">
       <div className="stack">
-        {parts.map((part) => (
+        {message && (
+          <div className="empty">
+            {message}
+            {!hasTeacher && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/student/select-teacher">Select teacher</Link></div>}
+          </div>
+        )}
+
+        {hasTeacher && parts.map((part) => (
           <section className="card stack" key={part.id}>
             <div>
               <span className="eyebrow">Part {part.order_index}</span>

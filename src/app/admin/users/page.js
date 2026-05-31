@@ -47,6 +47,29 @@ export default function AdminUsersPage() {
       });
   }, [currentUser]);
 
+  const teachers = users.filter((user) => user.role === 'TEACHER');
+  const students = users.filter((user) => user.role === 'STUDENT');
+  const admins = users.filter((user) => user.role === 'ADMIN');
+
+  function renderUser(user) {
+    return (
+      <div className="card user-row" style={{ boxShadow: 'none' }} key={user.id}>
+        <div>
+          <strong>{user.display_name || user.email}</strong>
+          <p className="muted">
+            {user.email}
+            {user.role === 'STUDENT' && user.assigned_teacher_name ? ` · Teacher: ${user.assigned_teacher_name}` : ''}
+          </p>
+        </div>
+        <div className="user-badges">
+          <span className="pill">{user.role}</span>
+          <span className="pill">{user.status}</span>
+          {user.must_change_password ? <span className="pill">Password change required</span> : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DashboardShell role="admin" title="Users">
       <div className="stack">
@@ -58,25 +81,35 @@ export default function AdminUsersPage() {
                 Students register publicly. Teacher accounts are created by Admin and require first-login password change.
               </p>
             </div>
-            <Link className="btn btn-primary" href="/admin/users/create-teacher">Create teacher</Link>
+            <div className="actions">
+              <Link className="btn" href="/admin/teacher-change-requests">Teacher requests</Link>
+              <Link className="btn btn-primary" href="/admin/users/create-teacher">Create teacher</Link>
+            </div>
           </div>
         </div>
 
         {message && <div className="empty">{message}</div>}
 
-        {users.map((user) => (
-          <div className="card user-row" style={{ boxShadow: 'none' }} key={user.id}>
-            <div>
-              <strong>{user.display_name || user.email}</strong>
-              <p className="muted">{user.email}</p>
-            </div>
-            <div className="user-badges">
-              <span className="pill">{user.role}</span>
-              <span className="pill">{user.status}</span>
-              {user.must_change_password ? <span className="pill">Password change required</span> : null}
-            </div>
-          </div>
-        ))}
+        {!message && (
+          <>
+            <section className="stack">
+              <div className="page-title"><h2>Teachers ({teachers.length})</h2></div>
+              {teachers.map(renderUser)}
+              {!teachers.length && <div className="empty">No teachers found.</div>}
+            </section>
+
+            <section className="stack">
+              <div className="page-title"><h2>Students ({students.length})</h2></div>
+              {students.map(renderUser)}
+              {!students.length && <div className="empty">No students found.</div>}
+            </section>
+
+            <section className="stack">
+              <div className="page-title"><h2>Admin ({admins.length})</h2></div>
+              {admins.map(renderUser)}
+            </section>
+          </>
+        )}
 
         {!message && !users.length && <div className="empty">No users found.</div>}
       </div>

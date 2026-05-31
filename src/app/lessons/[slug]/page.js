@@ -40,6 +40,21 @@ async function getLesson(slug, token) {
   }
 }
 
+async function hasSelectedTeacher(user) {
+  if (user.role !== 'STUDENT') return true;
+
+  try {
+    const response = await fetchApi('/student/dashboard', {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    });
+    return Boolean(response.data?.student?.teacher_id);
+  } catch {
+    return false;
+  }
+}
+
 export default async function LessonDetailPage({ params, searchParams }) {
   const { slug } = await params;
   const query = await searchParams;
@@ -48,6 +63,10 @@ export default async function LessonDetailPage({ params, searchParams }) {
 
   if (!user?.token) {
     redirect(buildLoginUrl(slug, mode));
+  }
+
+  if (!(await hasSelectedTeacher(user))) {
+    redirect('/student/select-teacher');
   }
 
   let data = null;

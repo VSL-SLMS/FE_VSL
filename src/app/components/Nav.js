@@ -42,6 +42,7 @@ export function DashboardShell({ role, title, children }) {
     admin: [
       ['Dashboard', '/admin', '▦'],
       ['Users', '/admin/users', '👥'],
+      ['Teacher Requests', '/admin/teacher-change-requests', '⇄'],
       ['Lessons', '/admin/lessons', '📘'],
       ['Accuracy', '/admin/accuracy', '◎'],
       ['Audit Logs', '/admin/audit', '◇']

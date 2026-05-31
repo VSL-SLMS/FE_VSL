@@ -7,6 +7,7 @@ import { apiUrl } from '../../../../lib/api';
 
 export default function CreateTeacherPage() {
   const [loading, setLoading] = useState(false);
+  const [createdTeacher, setCreatedTeacher] = useState(null);
   const [currentUser] = useState(() => {
     if (typeof window === 'undefined') return null;
     const rawUser = localStorage.getItem('slms_user');
@@ -55,7 +56,8 @@ export default function CreateTeacherPage() {
       }
 
       formElement.reset();
-      setMessage(`Teacher account created for ${payload.data.teacher.email}. First-login password change is required.`);
+      setCreatedTeacher(payload.data.teacher);
+      setMessage('');
     } catch (error) {
       setMessage('Network error or backend is offline.');
     } finally {
@@ -97,6 +99,22 @@ export default function CreateTeacherPage() {
         </div>
 
         {message && <div className="empty">{message}</div>}
+
+        {createdTeacher && (
+          <div className="modal-backdrop" role="presentation">
+            <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="teacher-created-title">
+              <span className="pill">Teacher created</span>
+              <h2 id="teacher-created-title">Teacher account is ready</h2>
+              <p className="muted">
+                {createdTeacher.email} can now log in with the temporary password and must change password on first login.
+              </p>
+              <div className="actions">
+                <button className="btn btn-primary" type="button" onClick={() => setCreatedTeacher(null)}>Create another</button>
+                <Link className="btn" href="/admin/users">View users</Link>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </DashboardShell>
   );
