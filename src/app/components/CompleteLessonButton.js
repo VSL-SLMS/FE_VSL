@@ -1,17 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
 import { readStoredUser } from '../../lib/authStorage';
 
-export default function CompleteLessonButton({ lessonId, initialCompleted }) {
+export default function CompleteLessonButton({ lessonId, initialCompleted, nextHref }) {
+  const router = useRouter();
   const [completed, setCompleted] = useState(Boolean(initialCompleted));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   async function markComplete() {
     const user = readStoredUser('STUDENT');
-    if (!user?.token || loading || completed) return;
+    if (!user?.token || loading) return;
+
+    if (completed) {
+      if (nextHref) router.push(nextHref);
+      return;
+    }
 
     setLoading(true);
     setMessage('');
@@ -27,6 +34,10 @@ export default function CompleteLessonButton({ lessonId, initialCompleted }) {
       if (!response.ok) throw new Error(payload.message || 'Could not complete lesson.');
 
       setCompleted(true);
+      if (nextHref) {
+        router.push(nextHref);
+        return;
+      }
       setMessage(`Completed. Course progress: ${payload.data?.progress?.progressPercent || 0}%`);
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -37,8 +48,16 @@ export default function CompleteLessonButton({ lessonId, initialCompleted }) {
 
   return (
     <div className="stack" style={{ gap: 10 }}>
-      <button className="btn btn-primary" type="button" onClick={markComplete} disabled={loading || completed}>
-        {completed ? 'Lesson completed' : loading ? 'Saving...' : 'Mark lesson complete'}
+      <button className="btn btn-primary" type="button" onClick={markComplete} disabled={loading}>
+        {loading
+          ? 'Saving...'
+          : completed && nextHref
+            ? 'Next lesson'
+            : nextHref
+              ? 'Complete and go to next'
+              : completed
+                ? 'Lesson completed'
+                : 'Mark lesson complete'}
       </button>
       {message && <p className="muted" style={{ margin: 0 }}>{message}</p>}
     </div>

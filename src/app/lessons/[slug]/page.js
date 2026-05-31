@@ -175,9 +175,6 @@ export default async function LessonDetailPage({ params, searchParams }) {
             <Link className={`btn ${mode === 'book' ? 'btn-primary' : ''}`} href={`/lessons/${lesson.slug}?mode=book`}>
               Book mode
             </Link>
-            {user.role === 'STUDENT' && (
-              <CompleteLessonButton lessonId={lesson.id} initialCompleted={progress?.status === 'COMPLETED'} />
-            )}
           </div>
         </header>
 
@@ -223,7 +220,14 @@ export default async function LessonDetailPage({ params, searchParams }) {
             <span className="eyebrow">Navigation</span>
             <div className="stack" style={{ marginTop: 16 }}>
               {navigation.prev && <Link className="btn" href={`/lessons/${navigation.prev.slug}`}>Previous lesson</Link>}
-              {navigation.next && <Link className="btn btn-primary" href={`/lessons/${navigation.next.slug}`}>Next lesson</Link>}
+              {user.role === 'STUDENT' && (
+                <CompleteLessonButton
+                  lessonId={lesson.id}
+                  initialCompleted={progress?.status === 'COMPLETED'}
+                  nextHref={navigation.next ? `/lessons/${navigation.next.slug}` : ''}
+                />
+              )}
+              {user.role !== 'STUDENT' && navigation.next && <Link className="btn btn-primary" href={`/lessons/${navigation.next.slug}`}>Next lesson</Link>}
               {!navigation.prev && !navigation.next && <p className="muted">No adjacent lesson in this chapter.</p>}
             </div>
           </aside>
