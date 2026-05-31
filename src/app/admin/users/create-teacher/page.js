@@ -105,7 +105,11 @@ export default function CreateTeacherPage() {
               {createdTeacher.email_delivery?.sent ? (
                 <p className="muted">Temporary password email was sent.</p>
               ) : (
-                <p className="muted">SMTP email was not sent. Share the temporary password manually.</p>
+                <p className="muted">
+                  SMTP email was not sent
+                  {createdTeacher.email_delivery?.reason ? ` (${createdTeacher.email_delivery.reason})` : ''}.
+                  Share the temporary password manually.
+                </p>
               )}
               <div className="actions">
                 <button className="btn btn-primary" type="button" onClick={() => setCreatedTeacher(null)}>Create another</button>
