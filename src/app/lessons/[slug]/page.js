@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Nav from '../../components/Nav';
-import { backendAssetUrl, fetchApi } from '../../../lib/api';
+import CompleteLessonButton from '../../components/CompleteLessonButton';
+import { apiUrl, backendAssetUrl, fetchApi } from '../../../lib/api';
 import Image from 'next/image';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -23,7 +24,28 @@ function buildLoginUrl(slug, mode) {
   return `/login?redirect=${encodeURIComponent(lessonPath)}`;
 }
 
-async function getLesson(slug, token) {
+async function getStudentLesson(slug, token) {
+  const response = await fetch(apiUrl(`/student/lessons/${slug}`), {
+    cache: 'no-store',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    const error = new Error(payload.message || 'Could not load student lesson.');
+    error.status = response.status;
+    error.code = payload.code;
+    throw error;
+  }
+  return payload.data;
+}
+
+async function getLesson(slug, token, role) {
+  if (role === 'STUDENT') {
+    return getStudentLesson(slug, token);
+  }
+
   try {
     const response = await fetchApi(`/lessons/${slug}`, {
       headers: {
@@ -72,9 +94,21 @@ export default async function LessonDetailPage({ params, searchParams }) {
   let data = null;
 
   try {
-    data = await getLesson(slug, user.token);
-  } catch {
-    redirect(buildLoginUrl(slug, mode));
+    data = await getLesson(slug, user.token, user.role);
+  } catch (error) {
+    if (error.code === 'COURSE_PURCHASE_REQUIRED') {
+      const preview = await fetchApi(`/lessons/${slug}`, {
+        headers: { Authorization: `Bearer ${user.token}` }
+      });
+      data = {
+        lesson: preview.data.lesson,
+        hasAccess: false
+      };
+    } else if (error.code === 'TEACHER_REQUIRED') {
+      redirect('/student/select-teacher');
+    } else {
+      redirect(buildLoginUrl(slug, mode));
+    }
   }
 
   if (!data) {
@@ -88,7 +122,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
     );
   }
 
-  const { lesson, content, pages, navigation, hasAccess } = data;
+  const { lesson, content = [], pages = [], navigation = {}, hasAccess, progress } = data;
 
   if (hasAccess === false) {
     return (
@@ -141,6 +175,9 @@ export default async function LessonDetailPage({ params, searchParams }) {
             <Link className={`btn ${mode === 'book' ? 'btn-primary' : ''}`} href={`/lessons/${lesson.slug}?mode=book`}>
               Book mode
             </Link>
+            {user.role === 'STUDENT' && (
+              <CompleteLessonButton lessonId={lesson.id} initialCompleted={progress?.status === 'COMPLETED'} />
+            )}
           </div>
         </header>
 

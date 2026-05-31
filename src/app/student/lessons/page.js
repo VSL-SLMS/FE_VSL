@@ -18,39 +18,39 @@ export default function StudentLessonsPage() {
   useEffect(() => {
     if (!currentUser?.token) return;
 
-    Promise.all([
-      fetch(apiUrl('/student/dashboard'), {
+    fetch(apiUrl('/student/lessons'), {
         headers: { Authorization: `Bearer ${currentUser.token}` }
-      }).then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message || 'Could not load student profile.');
-        return payload.data;
-      }),
-      fetch(apiUrl('/lessons')).then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message || 'Could not load lessons.');
-        return payload.data.parts || [];
-      }),
-      fetch(apiUrl('/course-access/me'), {
-        headers: { Authorization: `Bearer ${currentUser.token}` }
-      }).then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message || 'Could not load course access.');
-        return Boolean(payload.data?.hasAccess);
       })
-    ])
-      .then(([dashboard, lessonParts, courseAccess]) => {
-        const teacherSelected = Boolean(dashboard?.student?.teacher_id);
-        setHasTeacher(teacherSelected);
-        setHasCourseAccess(courseAccess);
-        setParts(teacherSelected ? lessonParts : []);
-        if (!teacherSelected) {
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) {
+          const error = new Error(payload.message || 'Could not load student lessons.');
+          error.code = payload.code;
+          throw error;
+        }
+        return payload.data.parts || [];
+      })
+      .then((lessonParts) => {
+        setHasTeacher(true);
+        setHasCourseAccess(true);
+        setParts(lessonParts);
+        setMessage('');
+      })
+      .catch((error) => {
+        setParts([]);
+        if (error.code === 'TEACHER_REQUIRED') {
+          setHasTeacher(false);
           setMessage('Choose a Teacher before accessing lessons.');
           return;
         }
-        setMessage(courseAccess ? '' : 'Purchase the course to unlock full lesson content.');
-      })
-      .catch((error) => setMessage(error.message || 'Backend is offline.'));
+        setHasTeacher(true);
+        if (error.code === 'COURSE_PURCHASE_REQUIRED') {
+          setHasCourseAccess(false);
+          setMessage('Purchase the course to unlock full lesson content.');
+          return;
+        }
+        setMessage(error.message || 'Backend is offline.');
+      });
   }, [currentUser]);
 
   return (
@@ -59,7 +59,8 @@ export default function StudentLessonsPage() {
         {message && (
           <div className="empty">
             {message}
-            {!hasTeacher && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/student/select-teacher">Select teacher</Link></div>}
+            {!currentUser?.token && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/login">Log in</Link></div>}
+            {currentUser?.token && !hasTeacher && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/student/select-teacher">Select teacher</Link></div>}
             {hasTeacher && !hasCourseAccess && <div style={{ marginTop: 14 }}><Link className="btn btn-primary" href="/payment">Purchase course</Link></div>}
           </div>
         )}
@@ -83,7 +84,7 @@ export default function StudentLessonsPage() {
                       <span className="pill">{lesson.lesson_type}</span>
                       <h3>{lesson.title}</h3>
                       <p className="muted">{lesson.estimated_minutes || 15} min</p>
-                      {!hasCourseAccess && <span className="pill">Locked</span>}
+                      <span className="pill">{lesson.progress_status === 'COMPLETED' ? 'Completed' : 'Not started'}</span>
                     </Link>
                   ))}
                 </div>
