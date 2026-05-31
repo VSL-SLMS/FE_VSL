@@ -33,7 +33,11 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       toast.success('Login successful!');
-      window.location.href = getRedirectTarget(`/${result.user.role.toLowerCase()}`);
+      localStorage.setItem('slms_user', JSON.stringify(result.user));
+      const defaultTarget = result.user.must_change_password
+        ? '/change-password'
+        : `/${result.user.role.toLowerCase()}`;
+      window.location.href = getRedirectTarget(defaultTarget);
     }
   }
 

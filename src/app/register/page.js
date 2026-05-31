@@ -16,7 +16,7 @@ export default function RegisterPage() {
     const name = form.get('name');
     const email = form.get('email');
     const password = form.get('password');
-    const role = form.get('role');
+    const role = 'STUDENT';
 
     const result = await registerAction(name, email, password, role);
 
@@ -25,6 +25,7 @@ export default function RegisterPage() {
       setLoading(false);
     } else {
       toast.success('Registration successful!');
+      localStorage.setItem('slms_user', JSON.stringify(result.user));
       window.location.href = `/${result.user.role.toLowerCase()}`;
     }
   }
@@ -39,13 +40,6 @@ export default function RegisterPage() {
           <div className="field"><label>Name</label><input name="name" required /></div>
           <div className="field"><label>Email</label><input name="email" type="email" required /></div>
           <div className="field"><label>Password</label><input name="password" type="password" minLength="6" required /></div>
-          <div className="field">
-            <label>Role</label>
-            <select name="role" defaultValue="STUDENT">
-              <option value="STUDENT">Student</option>
-              <option value="TEACHER">Teacher</option>
-            </select>
-          </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
             {loading ? 'Creating account...' : 'Create account'}
           </button>
