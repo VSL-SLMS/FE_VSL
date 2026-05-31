@@ -6,6 +6,7 @@ import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
 
 export default function CreateTeacherPage() {
+  const [loading, setLoading] = useState(false);
   const [currentUser] = useState(() => {
     if (typeof window === 'undefined') return null;
     const rawUser = localStorage.getItem('slms_user');
@@ -21,10 +22,12 @@ export default function CreateTeacherPage() {
 
   async function onSubmit(event) {
     event.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser || loading) return;
 
+    setLoading(true);
     setMessage('Creating teacher account...');
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
 
     try {
       const response = await fetch(apiUrl('/admin/teachers'), {
@@ -43,14 +46,20 @@ export default function CreateTeacherPage() {
 
       const payload = await response.json();
       if (!response.ok) {
-        setMessage(payload.message || 'Could not create teacher account.');
+        setMessage(
+          response.status === 409
+            ? 'This email is already registered. Use another email or check the Users page.'
+            : payload.message || 'Could not create teacher account.'
+        );
         return;
       }
 
-      event.currentTarget.reset();
+      formElement.reset();
       setMessage(`Teacher account created for ${payload.data.teacher.email}. First-login password change is required.`);
     } catch (error) {
       setMessage('Network error or backend is offline.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -79,7 +88,9 @@ export default function CreateTeacherPage() {
               </select>
             </div>
             <div className="actions" style={{ marginTop: 4 }}>
-              <button className="btn btn-primary" type="submit" disabled={!currentUser}>Create teacher</button>
+              <button className="btn btn-primary" type="submit" disabled={!currentUser || loading}>
+                {loading ? 'Creating...' : 'Create teacher'}
+              </button>
               <Link className="btn" href="/admin/users">Back to users</Link>
             </div>
           </form>
