@@ -1,12 +1,43 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
-import { readStoredUser } from '../../../../lib/authStorage';
+import { readStoredUser, removeStoredUser } from '../../../../lib/authStorage';
+
+async function verifyAdminSession(adminUser) {
+  if (!adminUser?.token) {
+    return { ok: false, message: 'Admin login is required.' };
+  }
+
+  const response = await fetch(apiUrl('/auth/me'), {
+    headers: {
+      Authorization: `Bearer ${adminUser.token}`
+    }
+  });
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message: response.status === 401
+        ? 'Admin session expired. Please log in again.'
+        : 'Could not verify admin session.'
+    };
+  }
+
+  const payload = await response.json();
+  const user = payload.data?.user;
+  if (user?.role !== 'ADMIN') {
+    return { ok: false, message: 'Admin permission is required.' };
+  }
+
+  return { ok: true };
+}
 
 export default function CreateTeacherPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [createdTeacher, setCreatedTeacher] = useState(null);
   const [currentUser] = useState(() => readStoredUser('ADMIN'));
@@ -17,14 +48,29 @@ export default function CreateTeacherPage() {
 
   async function onSubmit(event) {
     event.preventDefault();
-    if (!currentUser || loading) return;
+    if (loading) return;
+
+    if (!currentUser?.token) {
+      setMessage('Admin login is required.');
+      router.push('/login?redirect=/admin/users/create-teacher');
+      return;
+    }
 
     setLoading(true);
-    setMessage('Creating teacher account...');
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
 
     try {
+      setMessage('Verifying admin session...');
+      const session = await verifyAdminSession(currentUser);
+      if (!session.ok) {
+        setMessage(session.message);
+        removeStoredUser();
+        router.push('/login?redirect=/admin/users/create-teacher');
+        return;
+      }
+
+      setMessage('Creating teacher account...');
       const response = await fetch(apiUrl('/admin/teachers'), {
         method: 'POST',
         headers: {
@@ -42,10 +88,16 @@ export default function CreateTeacherPage() {
       const payload = await response.json();
       if (!response.ok) {
         setMessage(
-          response.status === 409
+          response.status === 401
+            ? 'Admin session expired. Please log in again.'
+            : response.status === 409
             ? 'This email is already registered. Use another email or check the Users page.'
             : payload.message || 'Could not create teacher account.'
         );
+        if (response.status === 401) {
+          removeStoredUser();
+          router.push('/login?redirect=/admin/users/create-teacher');
+        }
         return;
       }
 

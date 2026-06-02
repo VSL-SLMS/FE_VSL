@@ -7,17 +7,28 @@ function roleKey(role) {
 export function readStoredUser(expectedRole) {
   if (typeof window === 'undefined') return null;
 
-  if (expectedRole) {
-    const roleRaw = localStorage.getItem(roleKey(expectedRole));
-    if (roleRaw) return JSON.parse(roleRaw);
+  try {
+    if (expectedRole) {
+      const roleRaw = localStorage.getItem(roleKey(expectedRole));
+      if (roleRaw) {
+        const roleUser = JSON.parse(roleRaw);
+        if (roleUser?.role === String(expectedRole).toUpperCase() && roleUser?.token) {
+          return roleUser;
+        }
+      }
+    }
+
+    const rawUser = localStorage.getItem('slms_user');
+    if (!rawUser) return null;
+
+    const user = JSON.parse(rawUser);
+    if (!user?.token) return null;
+    if (expectedRole && user.role !== String(expectedRole).toUpperCase()) return null;
+    return user;
+  } catch (error) {
+    removeStoredUser();
+    return null;
   }
-
-  const rawUser = localStorage.getItem('slms_user');
-  if (!rawUser) return null;
-
-  const user = JSON.parse(rawUser);
-  if (expectedRole && user.role !== String(expectedRole).toUpperCase()) return null;
-  return user;
 }
 
 export function writeStoredUser(user) {
