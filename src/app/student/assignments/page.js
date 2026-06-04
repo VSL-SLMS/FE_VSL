@@ -1,9 +1,66 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
+import { apiUrl } from '../../../lib/api';
+import { readStoredUser } from '../../../lib/authStorage';
+
+function formatDate(value) {
+  if (!value) return 'No deadline';
+  return new Date(value).toLocaleString();
+}
 
 export default function StudentAssignmentsPage() {
+  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const [assignments, setAssignments] = useState([]);
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading assignments...' : 'Student login is required.'
+  );
+
+  useEffect(() => {
+    if (!currentUser?.token) return;
+
+    fetch(apiUrl('/student/assignments'), {
+      headers: { Authorization: `Bearer ${currentUser.token}` }
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load assignments.');
+        setAssignments(payload.data || []);
+        setMessage('');
+      })
+      .catch((error) => setMessage(error.message || 'Backend is offline.'));
+  }, [currentUser]);
+
   return (
     <DashboardShell role="student" title="Assignments">
-      <div className="empty">Assignments, submissions, scores, and feedback will connect to the backend in the next workflow phase.</div>
+      <div className="stack">
+        {message && <div className="empty">{message}</div>}
+        {!message && !assignments.length ? <div className="empty">No assignments have been assigned yet.</div> : null}
+
+        {assignments.map((assignment) => (
+          <section className="card stack" key={assignment.id} style={{ boxShadow: 'none' }}>
+            <div className="page-title">
+              <div>
+                <span className="eyebrow">{assignment.teacher_name}</span>
+                <h2>{assignment.title}</h2>
+                <p className="muted">{formatDate(assignment.deadline)}</p>
+              </div>
+              <span className="pill">{assignment.student_facing_status}</span>
+            </div>
+            <p className="muted">{assignment.instructions}</p>
+            {assignment.score !== null && assignment.score !== undefined ? (
+              <p><strong>Score:</strong> {assignment.score} · <strong>Feedback:</strong> {assignment.feedback || 'No feedback'}</p>
+            ) : null}
+            <div className="actions">
+              <Link className="btn btn-primary" href={`/student/assignments/${assignment.id}`}>
+                {assignment.can_submit ? 'Open and submit' : 'View detail'}
+              </Link>
+            </div>
+          </section>
+        ))}
+      </div>
     </DashboardShell>
   );
 }

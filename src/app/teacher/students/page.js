@@ -1,9 +1,56 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
+import { apiUrl } from '../../../lib/api';
+import { readStoredUser } from '../../../lib/authStorage';
 
 export default function TeacherStudentsPage() {
+  const [currentUser] = useState(() => readStoredUser('TEACHER'));
+  const [students, setStudents] = useState([]);
+  const [message, setMessage] = useState(() =>
+    currentUser?.token ? 'Loading assigned students...' : 'Teacher login is required.'
+  );
+
+  useEffect(() => {
+    if (!currentUser?.token) return;
+
+    fetch(apiUrl('/teacher/students'), {
+      headers: { Authorization: `Bearer ${currentUser.token}` }
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.message || 'Could not load students.');
+        setStudents(payload.data || []);
+        setMessage('');
+      })
+      .catch((error) => setMessage(error.message || 'Backend is offline.'));
+  }, [currentUser]);
+
   return (
     <DashboardShell role="teacher" title="Students">
-      <div className="empty">Assigned students will be loaded from backend after teacher-student selection is enforced.</div>
+      <div className="stack">
+        {message && <div className="empty">{message}</div>}
+
+        {!message && !students.length ? (
+          <div className="empty">No assigned students yet.</div>
+        ) : null}
+
+        {students.map((student) => (
+          <div className="user-row" key={student.id}>
+            <div>
+              <strong>{student.display_name}</strong>
+              <p className="muted">{student.email}</p>
+            </div>
+            <div className="actions" style={{ marginTop: 0 }}>
+              <span className="pill">{student.status}</span>
+              <span className="pill">{student.assignment_count || 0} assignments</span>
+              <span className="pill">{student.submitted_count || 0} submitted</span>
+              <span className="pill">{student.graded_count || 0} graded</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </DashboardShell>
   );
 }
