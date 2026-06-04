@@ -85,6 +85,7 @@ export function DashboardShell({ role, title, children }) {
   const nav = {
     student: [
       ['Dashboard', '/student', '▦'],
+      ['Profile', '/student/profile', '◉'],
       ['Lessons', '/student/lessons', '📘'],
       ['Assignments', '/student/assignments', '⬆'],
       ['Progress', '/student/progress', '↗'],
@@ -92,6 +93,7 @@ export function DashboardShell({ role, title, children }) {
     ],
     teacher: [
       ['Dashboard', '/teacher', '▦'],
+      ['Profile', '/teacher/profile', '◉'],
       ['Students', '/teacher/students', '👥'],
       ['Assignments', '/teacher/assignments', '☑'],
       ['Grading', '/teacher/grading', '🎓'],
