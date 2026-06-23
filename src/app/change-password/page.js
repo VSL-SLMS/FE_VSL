@@ -10,6 +10,8 @@ export default function ChangePasswordPage() {
   const router = useRouter();
   const [message, setMessage] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [verificationToken, setVerificationToken] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [user] = useState(() => readStoredUser());
 
   useEffect(() => {
@@ -19,28 +21,74 @@ export default function ChangePasswordPage() {
   }, [router, user]);
 
   async function requestOtp() {
-    if (!user?.token) return;
+    if (!user?.token || isLoading) return;
+    setIsLoading(true);
     setMessage('Sending OTP...');
 
-    const response = await fetch(apiUrl('/auth/change-password/request-otp'), {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${user.token}`
+    try {
+      const response = await fetch(apiUrl('/auth/change-password/request-otp'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        setMessage(payload.message || 'Could not send OTP.');
+        return;
       }
-    });
 
-    const payload = await response.json();
-    if (!response.ok) {
-      setMessage(payload.message || 'Could not send OTP.');
-      return;
+      setOtpSent(true);
+      setVerificationToken('');
+      setMessage('OTP sent to your email. It expires in 10 minutes.');
+    } catch {
+      setMessage('Network error or backend is offline.');
+    } finally {
+      setIsLoading(false);
     }
+  }
 
-    setOtpSent(true);
-    setMessage('OTP sent to your email. It expires in 10 minutes.');
+  async function verifyOtp(event) {
+    event.preventDefault();
+    if (!user?.token || isLoading) return;
+    setIsLoading(true);
+    setMessage('Verifying OTP...');
+
+    const form = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch(apiUrl('/auth/change-password/verify-otp'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          otp: form.get('otp')
+        })
+      });
+
+      const payload = await response.json();
+      if (!response.ok) {
+        setVerificationToken('');
+        setMessage(payload.message || 'OTP is invalid or expired.');
+        return;
+      }
+
+      setVerificationToken(payload.data.verificationToken);
+      setMessage('OTP verified. Please set your new password.');
+    } catch {
+      setMessage('Network error or backend is offline.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function onSubmit(event) {
     event.preventDefault();
+    if (!verificationToken || isLoading) return;
+    setIsLoading(true);
     setMessage('Updating password...');
     const form = new FormData(event.currentTarget);
     const newPassword = form.get('newPassword');
@@ -48,30 +96,37 @@ export default function ChangePasswordPage() {
 
     if (newPassword !== confirmPassword) {
       setMessage('New password and confirmation do not match.');
+      setIsLoading(false);
       return;
     }
 
-    const response = await fetch(apiUrl('/auth/change-password'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${user.token}`
-      },
-      body: JSON.stringify({
-        currentPassword: form.get('currentPassword'),
-        newPassword,
-        otp: form.get('otp')
-      })
-    });
+    try {
+      const response = await fetch(apiUrl('/auth/change-password'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          currentPassword: form.get('currentPassword'),
+          newPassword,
+          verificationToken
+        })
+      });
 
-    const payload = await response.json();
-    if (!response.ok) {
-      setMessage(payload.message || 'Could not change password.');
-      return;
+      const payload = await response.json();
+      if (!response.ok) {
+        setMessage(payload.message || 'Could not change password.');
+        return;
+      }
+
+      writeStoredUser(payload.data.user);
+      router.push(`/${payload.data.user.role.toLowerCase()}`);
+    } catch {
+      setMessage('Network error or backend is offline.');
+    } finally {
+      setIsLoading(false);
     }
-
-    writeStoredUser(payload.data.user);
-    router.push(`/${payload.data.user.role.toLowerCase()}`);
   }
 
   return (
@@ -79,17 +134,37 @@ export default function ChangePasswordPage() {
       <section className="auth-panel">
         <Link href="/" className="brand"><span className="brand-mark">✦</span><span>SignLearn</span></Link>
         <h1>Change password</h1>
-        <p className="muted">Password changes require an OTP sent to your account email.</p>
-        <button className="btn" type="button" onClick={requestOtp}>
-          {otpSent ? 'Send OTP again' : 'Send OTP'}
-        </button>
-        <form className="form-grid" onSubmit={onSubmit}>
-          <div className="field"><label>Current password</label><input name="currentPassword" type="password" required /></div>
-          <div className="field"><label>Email OTP</label><input name="otp" inputMode="numeric" minLength="6" maxLength="6" required /></div>
-          <div className="field"><label>New password</label><input name="newPassword" type="password" minLength="6" required /></div>
-          <div className="field"><label>Confirm password</label><input name="confirmPassword" type="password" minLength="6" required /></div>
-          <button className="btn btn-primary" type="submit">Update password</button>
-        </form>
+        <p className="muted">Verify your email first. The password form appears after the OTP is confirmed.</p>
+
+        {!otpSent && (
+          <button className="btn btn-primary" type="button" disabled={isLoading} onClick={requestOtp}>
+            Send OTP
+          </button>
+        )}
+
+        {otpSent && !verificationToken && (
+          <form className="form-grid" onSubmit={verifyOtp}>
+            <div className="field">
+              <label>Email OTP</label>
+              <input name="otp" inputMode="numeric" minLength="6" maxLength="6" required />
+            </div>
+            <button className="btn btn-primary" type="submit" disabled={isLoading}>
+              Verify OTP
+            </button>
+            <button className="btn" type="button" disabled={isLoading} onClick={requestOtp}>
+              Send OTP again
+            </button>
+          </form>
+        )}
+
+        {verificationToken && (
+          <form className="form-grid" onSubmit={onSubmit}>
+            <div className="field"><label>Current password</label><input name="currentPassword" type="password" required /></div>
+            <div className="field"><label>New password</label><input name="newPassword" type="password" minLength="6" required /></div>
+            <div className="field"><label>Confirm password</label><input name="confirmPassword" type="password" minLength="6" required /></div>
+            <button className="btn btn-primary" type="submit" disabled={isLoading}>Update password</button>
+          </form>
+        )}
         {message && <p className="muted">{message}</p>}
       </section>
     </main>
