@@ -12,8 +12,10 @@ export default function SelectTeacherPage() {
   const [teachers, setTeachers] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
+  const [recommendedTeacherId, setRecommendedTeacherId] = useState('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [recommendLoading, setRecommendLoading] = useState(false);
   const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [message, setMessage] = useState(() =>
     currentUser?.token ? 'Loading teachers...' : 'Student login is required.'
@@ -49,6 +51,34 @@ export default function SelectTeacherPage() {
   const hasTeacher = Boolean(dashboard?.student?.teacher_id);
   const pendingRequest = dashboard?.teacherChangeRequests?.find((request) => request.status === 'PENDING');
   const hasPendingRequest = Boolean(pendingRequest || requestSubmitted);
+
+  async function recommendTeacher() {
+    if (!currentUser?.token || recommendLoading) return;
+
+    setRecommendLoading(true);
+    setMessage('Finding a recommended Teacher...');
+
+    try {
+      const response = await fetch(apiUrl('/teachers?recommend=true'), {
+        headers: { Authorization: `Bearer ${currentUser.token}` }
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Could not recommend a Teacher.');
+
+      const recommendedTeachers = payload.data.teachers || [];
+      setTeachers(recommendedTeachers);
+      setRecommendedTeacherId(payload.data.recommendedTeacher?.id || recommendedTeachers[0]?.id || '');
+      setMessage(
+        recommendedTeachers.length
+          ? 'Recommended Teachers are sorted by available capacity first, then reliability.'
+          : 'No Teacher is currently accepting new Students.'
+      );
+    } catch (error) {
+      setMessage(error.message || 'Backend is offline.');
+    } finally {
+      setRecommendLoading(false);
+    }
+  }
 
   async function submitSelection(teacherId) {
     if (!currentUser?.token || loading) return;
@@ -137,25 +167,70 @@ export default function SelectTeacherPage() {
           </section>
         )}
 
+        {!hasTeacher && (
+          <section className="card stack" style={{ boxShadow: 'none' }}>
+            <div className="page-title">
+              <div>
+                <span className="eyebrow">Teacher selection</span>
+                <h2>Choose one Teacher</h2>
+                <p className="muted">
+                  Recommendation uses availability and current student count first. Reliability is secondary.
+                </p>
+              </div>
+              <button className="btn" type="button" onClick={recommendTeacher} disabled={recommendLoading || loading}>
+                {recommendLoading ? 'Finding...' : 'Recommend teacher for me'}
+              </button>
+            </div>
+          </section>
+        )}
+
         {!hasTeacher && <div className="role-grid">
           {teachers.map((teacher) => {
             const isCurrentTeacher = Number(teacher.id) === Number(dashboard?.student?.teacher_id);
+            const isFull = !teacher.is_accepting_students || teacher.availability_status === 'FULL';
+            const isRecommended = Number(recommendedTeacherId) === Number(teacher.id) || teacher.is_recommended;
+            const name = teacher.full_name || teacher.display_name || teacher.email;
             return (
               <article className="card" key={teacher.id}>
-                <span className="brand-mark">{teacher.display_name?.[0] || 'T'}</span>
-                <h2>{teacher.display_name}</h2>
+                <div className="page-title" style={{ alignItems: 'flex-start' }}>
+                  <span className="brand-mark">{name?.[0] || 'T'}</span>
+                  <div className="user-badges">
+                    {isRecommended && <span className="pill">Recommended</span>}
+                    <span className="pill">{teacher.availability_status || 'OPEN'}</span>
+                  </div>
+                </div>
+                <h2>{name}</h2>
                 <p className="muted">{teacher.email}</p>
-                <p className="pill">{teacher.accuracy}% accuracy</p>
+                <p className="muted">{teacher.bio || 'No bio provided yet.'}</p>
+                <div className="stack" style={{ gap: 8 }}>
+                  <p className="pill">{teacher.specialization || 'General VSL learning'}</p>
+                  <p className="pill">
+                    {teacher.current_student_count || 0}/{teacher.max_students || 30} Students
+                  </p>
+                  <p className="pill">
+                    {teacher.accuracy_verified
+                      ? `${teacher.reliability_label} · ${teacher.accuracy}% verified accuracy`
+                      : 'NEW · no verified grading history yet'}
+                  </p>
+                </div>
                 <button
                   className="btn btn-primary"
                   type="button"
-                  disabled={loading || isCurrentTeacher || (hasTeacher && !reason.trim())}
+                  disabled={loading || isCurrentTeacher || isFull || (hasTeacher && !reason.trim())}
                   onClick={() => {
                     setSelectedTeacherId(teacher.id);
                     submitSelection(teacher.id);
                   }}
                 >
-                  {isCurrentTeacher ? 'Current teacher' : selectedTeacherId === teacher.id && loading ? 'Submitting...' : hasTeacher ? 'Request change' : 'Select teacher'}
+                  {isCurrentTeacher
+                    ? 'Current teacher'
+                    : isFull
+                      ? 'Full'
+                      : selectedTeacherId === teacher.id && loading
+                        ? 'Submitting...'
+                        : hasTeacher
+                          ? 'Request change'
+                          : 'Select teacher'}
                 </button>
               </article>
             );

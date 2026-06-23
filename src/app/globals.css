@@ -619,6 +619,81 @@ textarea {
   margin: 0;
 }
 
+.topic-card {
+  min-height: 230px;
+}
+
+.topic-study-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.topic-video-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.topic-video {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  aspect-ratio: 16 / 9;
+  background: #050505;
+  object-fit: contain;
+}
+
+.topic-word-list {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 10px;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  box-shadow: none;
+}
+
+.topic-word-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  padding: 12px;
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.topic-word-button:hover,
+.topic-word-button.is-active {
+  border-color: var(--primary);
+  background: color-mix(in oklch, var(--accent) 55%, white);
+  transform: translateY(-1px);
+}
+
+.topic-word-button > span:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topic-word-button strong {
+  overflow-wrap: anywhere;
+}
+
+.topic-word-button small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .lesson-article blockquote {
   margin: 0;
   border-left: 4px solid var(--primary);
@@ -922,7 +997,8 @@ textarea {
   .hero-inner,
   .split,
   .lesson-layout,
-  .dashboard-layout {
+  .dashboard-layout,
+  .topic-study-layout {
     grid-template-columns: 1fr;
   }
 
@@ -966,5 +1042,10 @@ textarea {
 
   .search-box {
     width: 100%;
+  }
+
+  .topic-word-list {
+    position: static;
+    max-height: none;
   }
 }

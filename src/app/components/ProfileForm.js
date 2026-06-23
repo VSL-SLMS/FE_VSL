@@ -9,6 +9,11 @@ function getRoleLabel(role) {
   return String(role || '').toLowerCase();
 }
 
+function formatDateInput(value) {
+  if (!value) return '';
+  return String(value).slice(0, 10);
+}
+
 export default function ProfileForm({ role }) {
   const expectedRole = String(role || '').toUpperCase();
   const [currentUser, setCurrentUser] = useState(() => readStoredUser(expectedRole));
@@ -34,7 +39,9 @@ export default function ProfileForm({ role }) {
         },
         body: JSON.stringify({
           name: form.get('name'),
-          avatarUrl: form.get('avatarUrl')
+          email: expectedRole === 'STUDENT' ? form.get('email') : undefined,
+          avatarUrl: form.get('avatarUrl'),
+          dateOfBirth: expectedRole === 'STUDENT' ? form.get('dateOfBirth') : undefined
         })
       });
 
@@ -125,6 +132,18 @@ export default function ProfileForm({ role }) {
             <label>Display name</label>
             <input name="name" defaultValue={currentUser?.display_name || ''} required />
           </div>
+          {expectedRole === 'STUDENT' && (
+            <>
+              <div className="field">
+                <label>Email</label>
+                <input name="email" type="email" defaultValue={currentUser?.email || ''} required />
+              </div>
+              <div className="field">
+                <label>Date of birth</label>
+                <input name="dateOfBirth" type="date" defaultValue={formatDateInput(currentUser?.date_of_birth)} />
+              </div>
+            </>
+          )}
           <div className="field">
             <label>Avatar URL</label>
             <input name="avatarUrl" defaultValue={currentUser?.avatar_url || ''} placeholder="https://example.com/avatar.png" />

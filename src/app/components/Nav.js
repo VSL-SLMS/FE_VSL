@@ -87,6 +87,7 @@ export function DashboardShell({ role, title, children }) {
       ['Dashboard', '/student', '▦'],
       ['Profile', '/student/profile', '◉'],
       ['Lessons', '/student/lessons', '📘'],
+      ['Topic videos', '/student/topic-lessons', '▶'],
       ['Assignments', '/student/assignments', '⬆'],
       ['Progress', '/student/progress', '↗'],
       ['Appeals', '/student/appeals', '⚑']
