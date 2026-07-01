@@ -89,24 +89,20 @@ export function DashboardShell({ role, title, children }) {
       ['Lessons', '/student/lessons', '📘'],
       ['Topic videos', '/student/topic-lessons', '▶'],
       ['Assignments', '/student/assignments', '⬆'],
-      ['Progress', '/student/progress', '↗'],
-      ['Appeals', '/student/appeals', '⚑']
+      ['Progress', '/student/progress', '↗']
     ],
     teacher: [
       ['Dashboard', '/teacher', '▦'],
       ['Profile', '/teacher/profile', '◉'],
       ['Students', '/teacher/students', '👥'],
       ['Assignments', '/teacher/assignments', '☑'],
-      ['Grading', '/teacher/grading', '🎓'],
-      ['Accuracy', '/teacher/accuracy', '◎']
+      ['Grading', '/teacher/grading', '🎓']
     ],
     admin: [
       ['Dashboard', '/admin', '▦'],
       ['Users', '/admin/users', '👥'],
       ['Teacher Requests', '/admin/teacher-change-requests', '⇄'],
-      ['Lessons', '/admin/lessons', '📘'],
-      ['Accuracy', '/admin/accuracy', '◎'],
-      ['Audit Logs', '/admin/audit', '◇']
+      ['Lessons', '/admin/lessons', '📘']
     ]
   }[role];
 

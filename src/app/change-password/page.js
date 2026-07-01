@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
 import { readStoredUser, writeStoredUser } from '../../lib/authStorage';
+import { changePasswordAction } from '../actions/auth';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -101,27 +102,20 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      const response = await fetch(apiUrl('/auth/change-password'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify({
-          currentPassword: form.get('currentPassword'),
-          newPassword,
-          verificationToken
-        })
+      const result = await changePasswordAction({
+        currentPassword: form.get('currentPassword'),
+        newPassword,
+        verificationToken,
+        token: user.token
       });
 
-      const payload = await response.json();
-      if (!response.ok) {
-        setMessage(payload.message || 'Could not change password.');
+      if (!result.success) {
+        setMessage(result.message);
         return;
       }
 
-      writeStoredUser(payload.data.user);
-      router.push(`/${payload.data.user.role.toLowerCase()}`);
+      writeStoredUser(result.user);
+      router.push(`/${result.user.role.toLowerCase()}`);
     } catch {
       setMessage('Network error or backend is offline.');
     } finally {

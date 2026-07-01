@@ -4,6 +4,13 @@ function roleKey(role) {
   return `slms_user_${String(role || '').toUpperCase()}`;
 }
 
+function clearStoredUserKeys() {
+  localStorage.removeItem('slms_user');
+  localStorage.removeItem(roleKey('STUDENT'));
+  localStorage.removeItem(roleKey('TEACHER'));
+  localStorage.removeItem(roleKey('ADMIN'));
+}
+
 export function readStoredUser(expectedRole) {
   if (typeof window === 'undefined') return null;
 
@@ -26,7 +33,7 @@ export function readStoredUser(expectedRole) {
     if (expectedRole && user.role !== String(expectedRole).toUpperCase()) return null;
     return user;
   } catch (error) {
-    removeStoredUser();
+    clearStoredUserKeys();
     return null;
   }
 }
@@ -40,8 +47,6 @@ export function writeStoredUser(user) {
 
 export function removeStoredUser() {
   if (typeof window === 'undefined') return;
-  const user = readStoredUser();
-  if (user?.role) localStorage.removeItem(roleKey(user.role));
-  localStorage.removeItem('slms_user');
+  clearStoredUserKeys();
   window.dispatchEvent(new Event('slms-auth-changed'));
 }

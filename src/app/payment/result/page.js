@@ -81,8 +81,8 @@ function PaymentResultInner() {
         {isSuccess ? 'Thanh toán thành công!' : 'Thanh toán thất bại'}
       </h2>
       <p className="muted" style={{ lineHeight: 1.6 }}>
-        {isSuccess 
-          ? 'Tài khoản của bạn đã được nâng cấp quyền truy cập trọn đời cho khóa học.' 
+        {isSuccess
+          ? 'Tài khoản của bạn đã được nâng cấp quyền truy cập trọn đời cho khóa học.'
           : (result?.message || 'Giao dịch của bạn đã bị hủy hoặc không thành công.')}
       </p>
 

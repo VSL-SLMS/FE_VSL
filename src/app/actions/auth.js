@@ -13,6 +13,28 @@ function normalizeAuthUser(payload) {
   };
 }
 
+async function setSessionCookie(user) {
+  const cookieStore = await cookies();
+  cookieStore.set('slms_session', JSON.stringify(user), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/'
+  });
+}
+
+async function getSessionUser() {
+  const cookieStore = await cookies();
+  const rawSession = cookieStore.get('slms_session')?.value;
+  if (!rawSession) return null;
+
+  try {
+    return JSON.parse(rawSession);
+  } catch {
+    return null;
+  }
+}
+
 export async function loginAction(email, password) {
   try {
     const response = await fetch(apiUrl('/auth/login'), {
@@ -32,13 +54,7 @@ export async function loginAction(email, password) {
       return { success: false, message: 'Invalid login response from backend.' };
     }
 
-    const cookieStore = await cookies();
-    cookieStore.set('slms_session', JSON.stringify(user), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
-    });
+    await setSessionCookie(user);
 
     return { success: true, user };
   } catch (error) {
@@ -65,13 +81,7 @@ export async function registerAction(name, email, password, role) {
       return { success: false, message: 'Invalid registration response from backend.' };
     }
 
-    const cookieStore = await cookies();
-    cookieStore.set('slms_session', JSON.stringify(user), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
-    });
+    await setSessionCookie(user);
 
     return { success: true, user };
   } catch (error) {
@@ -82,4 +92,39 @@ export async function registerAction(name, email, password, role) {
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete('slms_session');
+}
+
+export async function changePasswordAction({ currentPassword, newPassword, verificationToken, token }) {
+  const sessionUser = await getSessionUser();
+  const authToken = token || sessionUser?.token;
+  if (!authToken) {
+    return { success: false, message: 'Authentication required.' };
+  }
+
+  try {
+    const response = await fetch(apiUrl('/auth/change-password'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      cache: 'no-store',
+      body: JSON.stringify({ currentPassword, newPassword, verificationToken })
+    });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      return { success: false, message: payload.message || 'Could not change password.' };
+    }
+
+    const user = normalizeAuthUser(payload);
+    if (!user) {
+      return { success: false, message: 'Invalid password change response from backend.' };
+    }
+
+    await setSessionCookie(user);
+    return { success: true, user };
+  } catch {
+    return { success: false, message: 'Network error or backend is offline.' };
+  }
 }

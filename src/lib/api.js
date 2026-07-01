@@ -44,18 +44,11 @@ function normalizeApiBaseUrl(value) {
 }
 
 const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
-const BACKEND_ORIGIN = normalizeBackendOrigin(
-  process.env.NEXT_PUBLIC_BACKEND_ORIGIN || PRODUCTION_BACKEND_ORIGIN
-);
+const BACKEND_ORIGIN = normalizeBackendOrigin(process.env.NEXT_PUBLIC_BACKEND_ORIGIN);
 
 export function apiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_BASE_URL}${normalizedPath}`;
-}
-
-function productionApiUrl(path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${PRODUCTION_BACKEND_ORIGIN}/api${normalizedPath}`;
 }
 
 function createTimeoutSignal() {
@@ -92,16 +85,5 @@ async function fetchJson(url, options = {}) {
 }
 
 export async function fetchApi(path, options = {}) {
-  const primaryUrl = apiUrl(path);
-  const fallbackUrl = productionApiUrl(path);
-
-  try {
-    return await fetchJson(primaryUrl, options);
-  } catch (error) {
-    if (primaryUrl === fallbackUrl || (error.status && error.status < 500)) {
-      throw error;
-    }
-
-    return fetchJson(fallbackUrl, options);
-  }
+  return fetchJson(apiUrl(path), options);
 }

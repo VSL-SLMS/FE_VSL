@@ -143,7 +143,7 @@ export default async function LessonDetailPage({ params, searchParams }) {
             <p className="muted" style={{ maxWidth: 500, margin: '0 auto 28px', lineHeight: 1.6, fontWeight: 800 }}>
               Bài học này chỉ dành cho học viên đã mua khóa học. Hãy tham gia cùng hàng ngàn học viên khác mở khóa trọn đời toàn bộ 28 bài học của SignLearn ngay hôm nay!
             </p>
-            
+
             <div className="stack" style={{ gap: 14, margin: '0 auto', maxWidth: 320, width: '100%' }}>
               <Link href="/payment" className="btn btn-primary" style={{ width: '100%', minHeight: 46 }}>
                 Mua khóa học ngay (299.000đ)

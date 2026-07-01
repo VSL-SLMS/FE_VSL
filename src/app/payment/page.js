@@ -109,7 +109,7 @@ export default function PaymentPricingPage() {
               <span className="eyebrow" style={{ color: 'var(--success)' }}>Thông Tin Khóa Học</span>
               <h2 style={{ fontSize: 24, margin: '4px 0 12px' }}>{pricing.title}</h2>
               <p className="muted" style={{ lineHeight: 1.6 }}>{pricing.description}</p>
-              
+
               <hr style={{ border: 'none', borderTop: '1px solid var(--line)', margin: '12px 0' }} />
 
               <div className="stack" style={{ gap: 12 }}>
@@ -153,9 +153,9 @@ export default function PaymentPricingPage() {
               </div>
 
               <div className="stack" style={{ gap: 16, marginTop: 24 }}>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={handlePayment} 
+                <button
+                  className="btn btn-primary"
+                  onClick={handlePayment}
                   disabled={checkingOut}
                   style={{ width: '100%', minHeight: 48, fontSize: 16 }}
                 >
