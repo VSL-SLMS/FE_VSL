@@ -645,6 +645,21 @@ textarea {
   object-fit: contain;
 }
 
+.submission-video {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  aspect-ratio: 16 / 9;
+  background: #050505;
+  object-fit: contain;
+}
+
+.upload-progress {
+  width: 100%;
+  height: 10px;
+}
+
 .topic-word-list {
   position: sticky;
   top: 88px;

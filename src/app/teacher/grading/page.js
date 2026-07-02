@@ -11,9 +11,16 @@ function statusLabel(status) {
   return status === 'NOT_SUBMITTED' ? 'Not submitted' : status;
 }
 
+function formatBytes(value) {
+  if (!value) return '0 MB';
+  return `${(Number(value) / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function TeacherGradingPage() {
   const [currentUser] = useState(() => readStoredUser('TEACHER'));
   const [submissions, setSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [detailLoadingId, setDetailLoadingId] = useState(null);
   const [gradingId, setGradingId] = useState(null);
   const [message, setMessage] = useState(() =>
     currentUser?.token ? 'Loading submissions...' : 'Teacher login is required.'
@@ -30,6 +37,20 @@ export default function TeacherGradingPage() {
 
     setSubmissions(payload.data || []);
     setMessage('');
+  }, [currentUser]);
+
+  const loadSubmissionDetail = useCallback(async (submissionId) => {
+    if (!currentUser?.token) return;
+
+    setDetailLoadingId(submissionId);
+    const response = await fetch(apiUrl(`/teacher/submissions/${submissionId}`), {
+      headers: { Authorization: `Bearer ${currentUser.token}` }
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.message || 'Could not load submission detail.');
+
+    setSelectedSubmission(payload.data);
+    setDetailLoadingId(null);
   }, [currentUser]);
 
   useEffect(() => {
@@ -61,6 +82,7 @@ export default function TeacherGradingPage() {
       if (!response.ok) throw new Error(payload.message || 'Could not grade submission.');
 
       await loadSubmissions();
+      setSelectedSubmission(null);
       setMessage('Submission graded and locked.');
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -91,48 +113,77 @@ export default function TeacherGradingPage() {
 
         {!submissions.length ? <div className="empty">No submissions yet.</div> : null}
 
-        {submissions.map((submission) => (
-          <section className="card stack" key={`${submission.assignment_id}-${submission.student_id}`} style={{ boxShadow: 'none' }}>
-            <div className="page-title">
-              <div>
-                <span className="eyebrow">{submission.assignment_title}</span>
-                <h2>{submission.student_name}</h2>
-                <p className="muted">{submission.student_email}</p>
-              </div>
-              <span className="pill">{statusLabel(submission.submission_status)}</span>
-            </div>
+        {submissions.map((submission) => {
+          const isSelected = selectedSubmission?.id === submission.submission_id;
+          const detail = isSelected ? selectedSubmission : submission;
+          const media = detail.media;
 
-            {submission.submission_id ? (
+          return (
+            <section className="card stack" key={`${submission.assignment_id}-${submission.student_id}`} style={{ boxShadow: 'none' }}>
+              <div className="page-title">
+                <div>
+                  <span className="eyebrow">{submission.assignment_title}</span>
+                  <h2>{submission.student_name}</h2>
+                  <p className="muted">{submission.student_email}</p>
+                </div>
+                <span className="pill">{statusLabel(submission.submission_status)}</span>
+              </div>
+
               <div className="card" style={{ boxShadow: 'none' }}>
-                <p><strong>Answer:</strong> {submission.content || 'No text answer'}</p>
-                {submission.file_path ? <p><strong>File:</strong> {submission.file_path}</p> : null}
-                {submission.score !== null && submission.score !== undefined ? (
-                  <p><strong>Score:</strong> {submission.score} · <strong>Feedback:</strong> {submission.feedback}</p>
+                <p><strong>Answer:</strong> {detail.content || 'No text answer'}</p>
+                {media ? (
+                  <p className="muted">{media.original_filename || media.public_id} · {formatBytes(media.bytes)}</p>
+                ) : null}
+                {detail.score !== null && detail.score !== undefined ? (
+                  <p><strong>Score:</strong> {detail.score} · <strong>Feedback:</strong> {detail.feedback}</p>
                 ) : null}
               </div>
-            ) : (
-              <p className="muted">Student has not submitted this assignment.</p>
-            )}
 
-            {submission.can_grade ? (
-              <form className="form-grid" onSubmit={(event) => onGrade(event, submission.submission_id)}>
-                <div className="field">
-                  <label>Score</label>
-                  <input name="score" type="number" min="0" max="100" step="0.01" required />
-                </div>
-                <div className="field">
-                  <label>Feedback</label>
-                  <textarea name="feedback" rows="3" required />
-                </div>
-                <div className="actions" style={{ marginTop: 4 }}>
-                  <button className="btn btn-primary" type="submit" disabled={gradingId === submission.submission_id}>
-                    {gradingId === submission.submission_id ? 'Saving...' : 'Grade and lock'}
-                  </button>
-                </div>
-              </form>
-            ) : null}
-          </section>
-        ))}
+              <div className="actions">
+                <button
+                  className="btn"
+                  type="button"
+                  disabled={detailLoadingId === submission.submission_id}
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedSubmission(null);
+                      return;
+                    }
+                    loadSubmissionDetail(submission.submission_id)
+                      .catch((error) => {
+                        setDetailLoadingId(null);
+                        setMessage(error.message || 'Backend is offline.');
+                      });
+                  }}
+                >
+                  {detailLoadingId === submission.submission_id ? 'Loading...' : isSelected ? 'Close review' : 'Review video'}
+                </button>
+              </div>
+
+              {isSelected && media?.playback_url ? (
+                <video className="submission-video" src={media.playback_url} controls preload="metadata" />
+              ) : null}
+
+              {isSelected && submission.can_grade ? (
+                <form className="form-grid" onSubmit={(event) => onGrade(event, submission.submission_id)}>
+                  <div className="field">
+                    <label>Score</label>
+                    <input name="score" type="number" min="0" max="100" step="0.01" required />
+                  </div>
+                  <div className="field">
+                    <label>Feedback</label>
+                    <textarea name="feedback" rows="3" required />
+                  </div>
+                  <div className="actions" style={{ marginTop: 4 }}>
+                    <button className="btn btn-primary" type="submit" disabled={gradingId === submission.submission_id}>
+                      {gradingId === submission.submission_id ? 'Saving...' : 'Grade and lock'}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
     </DashboardShell>
   );
