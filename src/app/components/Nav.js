@@ -5,10 +5,10 @@ import LogoutButton from './LogoutButton';
 import { useMemo, useSyncExternalStore } from 'react';
 import { logoutAction } from '../actions/auth';
 import { removeStoredUser } from '../../lib/authStorage';
+import { getRoleHomePath } from '../../lib/roleRoutes';
 
 function getDashboardHref(user) {
-  if (!user?.role) return '/login';
-  return `/${String(user.role).toLowerCase()}`;
+  return getRoleHomePath(user?.role);
 }
 
 function subscribeAuth(callback) {
@@ -44,7 +44,7 @@ export function HomeNav() {
   async function handleLogout() {
     await logoutAction();
     removeStoredUser();
-    window.location.href = '/login';
+    window.location.href = '/';
   }
 
   return (
@@ -109,7 +109,7 @@ export function DashboardShell({ role, title, children }) {
   return (
     <div className="dashboard-layout">
       <aside className="sidebar">
-        <Link href="/" className="brand">
+        <Link href={getRoleHomePath(role)} className="brand">
           <span className="brand-mark">✦</span>
           <span>
             <span>SignLearn</span>
@@ -134,7 +134,6 @@ export function DashboardShell({ role, title, children }) {
         <header className="topbar">
           <input className="search-box" placeholder="Search lessons, students..." />
           <div className="nav-actions">
-            <Link href="/curriculum">Curriculum</Link>
             <span className="brand-mark" style={{ width: 34, height: 34 }}>{role[0].toUpperCase()}</span>
           </div>
         </header>

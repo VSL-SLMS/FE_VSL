@@ -6,20 +6,20 @@ import { useRouter } from 'next/navigation';
 import Nav from '../components/Nav';
 import { createPaymentAction, getPricingAction } from '../actions/payment';
 import toast from 'react-hot-toast';
-import { readStoredUser } from '../../lib/authStorage';
+import { useStoredUser } from '../../lib/authStorage';
 
 export default function PaymentPricingPage() {
   const router = useRouter();
   const [pricing, setPricing] = useState(null);
   const [loadingPricing, setLoadingPricing] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
-  const [user] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user } = useStoredUser('STUDENT');
 
   useEffect(() => {
-    if (!user) {
+    if (authReady && !user) {
       router.replace(`/login?redirect=${encodeURIComponent('/payment')}`);
     }
-  }, [router, user]);
+  }, [authReady, router, user]);
 
   useEffect(() => {
     async function fetchPricing() {

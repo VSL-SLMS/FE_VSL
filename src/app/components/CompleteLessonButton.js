@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
 import { readStoredUser } from '../../lib/authStorage';
 
-export default function CompleteLessonButton({ lessonId, initialCompleted, nextHref }) {
+export default function CompleteLessonButton({ lessonId, initialCompleted }) {
   const router = useRouter();
   const [completed, setCompleted] = useState(Boolean(initialCompleted));
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,6 @@ export default function CompleteLessonButton({ lessonId, initialCompleted, nextH
     if (!user?.token || loading) return;
 
     if (completed) {
-      if (nextHref) router.push(nextHref);
       return;
     }
 
@@ -34,10 +33,7 @@ export default function CompleteLessonButton({ lessonId, initialCompleted, nextH
       if (!response.ok) throw new Error(payload.message || 'Could not complete lesson.');
 
       setCompleted(true);
-      if (nextHref) {
-        router.push(nextHref);
-        return;
-      }
+      router.refresh();
       setMessage(`Completed. Course progress: ${payload.data?.progress?.progressPercent || 0}%`);
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -48,16 +44,12 @@ export default function CompleteLessonButton({ lessonId, initialCompleted, nextH
 
   return (
     <div className="stack" style={{ gap: 10 }}>
-      <button className="btn btn-primary" type="button" onClick={markComplete} disabled={loading}>
+      <button className="btn btn-primary" type="button" onClick={markComplete} disabled={loading || completed}>
         {loading
           ? 'Saving...'
-          : completed && nextHref
-            ? 'Next lesson'
-            : nextHref
-              ? 'Complete and go to next'
-              : completed
-                ? 'Lesson completed'
-                : 'Mark lesson complete'}
+          : completed
+            ? 'Completed'
+            : 'Mark as Complete'}
       </button>
       {message && <p className="muted" style={{ margin: 0 }}>{message}</p>}
     </div>

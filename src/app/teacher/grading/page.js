@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 function statusLabel(status) {
   return status === 'NOT_SUBMITTED' ? 'Not submitted' : status;
@@ -17,17 +17,19 @@ function formatBytes(value) {
 }
 
 export default function TeacherGradingPage() {
-  const [currentUser] = useState(() => readStoredUser('TEACHER'));
+  const { ready: authReady, user: currentUser } = useStoredUser('TEACHER');
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [detailLoadingId, setDetailLoadingId] = useState(null);
   const [gradingId, setGradingId] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading submissions...' : 'Teacher login is required.'
-  );
+  const [message, setMessage] = useState('Loading submissions...');
 
   const loadSubmissions = useCallback(async () => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Teacher login is required.');
+      return;
+    }
 
     const response = await fetch(apiUrl('/teacher/submissions'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -37,7 +39,7 @@ export default function TeacherGradingPage() {
 
     setSubmissions(payload.data || []);
     setMessage('');
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   const loadSubmissionDetail = useCallback(async (submissionId) => {
     if (!currentUser?.token) return;

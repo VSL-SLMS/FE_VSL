@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 export default function SelectTeacherPage() {
   const router = useRouter();
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [teachers, setTeachers] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [selectedTeacherId, setSelectedTeacherId] = useState('');
@@ -17,12 +17,14 @@ export default function SelectTeacherPage() {
   const [loading, setLoading] = useState(false);
   const [recommendLoading, setRecommendLoading] = useState(false);
   const [requestSubmitted, setRequestSubmitted] = useState(false);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading teachers...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading teachers...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return;
+    }
 
     Promise.all([
       fetch(apiUrl('/teachers'), {
@@ -46,7 +48,7 @@ export default function SelectTeacherPage() {
         setMessage('');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   const hasTeacher = Boolean(dashboard?.student?.teacher_id);
   const pendingRequest = dashboard?.teacherChangeRequests?.find((request) => request.status === 'PENDING');

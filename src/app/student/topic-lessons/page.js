@@ -6,19 +6,22 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 export default function StudentTopicLessonsPage() {
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [topics, setTopics] = useState([]);
   const [summary, setSummary] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading topic lessons...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading topic lessons...');
   const [actionLink, setActionLink] = useState(null);
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setActionLink({ href: '/login', label: 'Log in' });
+      setMessage('Student login is required.');
+      return;
+    }
 
     fetch(apiUrl('/student/topic-lessons'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -49,7 +52,7 @@ export default function StudentTopicLessonsPage() {
         }
         setMessage(error.message || 'Backend is offline.');
       });
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   return (
     <DashboardShell role="student" title="Topic video lessons">

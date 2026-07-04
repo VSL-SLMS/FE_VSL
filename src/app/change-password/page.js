@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '../../lib/api';
-import { readStoredUser, writeStoredUser } from '../../lib/authStorage';
+import { useStoredUser, writeStoredUser } from '../../lib/authStorage';
 import { changePasswordAction } from '../actions/auth';
+import { getRoleHomePath } from '../../lib/roleRoutes';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -13,13 +14,13 @@ export default function ChangePasswordPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [verificationToken, setVerificationToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [user] = useState(() => readStoredUser());
+  const { ready: authReady, user } = useStoredUser();
 
   useEffect(() => {
-    if (!user) {
+    if (authReady && !user) {
       router.push('/login');
     }
-  }, [router, user]);
+  }, [authReady, router, user]);
 
   async function requestOtp() {
     if (!user?.token || isLoading) return;
@@ -115,7 +116,7 @@ export default function ChangePasswordPage() {
       }
 
       writeStoredUser(result.user);
-      router.push(`/${result.user.role.toLowerCase()}`);
+        router.push(getRoleHomePath(result.user.role));
     } catch {
       setMessage('Network error or backend is offline.');
     } finally {

@@ -6,18 +6,20 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 export default function StudentProgressPage() {
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [progress, setProgress] = useState(null);
   const [topicProgress, setTopicProgress] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading progress...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading progress...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return;
+    }
 
     Promise.allSettled([
       fetch(apiUrl('/student/progress'), {
@@ -42,7 +44,7 @@ export default function StudentProgressPage() {
         setMessage('');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   const summary = progress?.summary || { totalLessons: 0, completedLessons: 0, progressPercent: 0 };
   const topicSummary = topicProgress?.summary || { total_topics: 0, completed_topics: 0, progress_percent: 0 };

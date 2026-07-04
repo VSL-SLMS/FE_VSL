@@ -4,26 +4,24 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 export default function AdminUsersPage() {
-  const [currentUser] = useState(() => readStoredUser('ADMIN'));
+  const { ready: authReady, user: currentUser } = useStoredUser('ADMIN');
   const [users, setUsers] = useState([]);
   const [teacherAccounts, setTeacherAccounts] = useState([]);
   const [updatingTeacherId, setUpdatingTeacherId] = useState(null);
   const [editingTeacherId, setEditingTeacherId] = useState(null);
   const [savingTeacherProfileId, setSavingTeacherProfileId] = useState(null);
-  const [message, setMessage] = useState(() => {
-    const storedAdmin = readStoredUser('ADMIN');
-    return storedAdmin?.token ? 'Loading users...' : 'Admin login is required.';
-  });
+  const [message, setMessage] = useState('Loading users...');
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!authReady) {
       return;
     }
 
-    if (currentUser.role !== 'ADMIN') {
+    if (!currentUser?.token || currentUser.role !== 'ADMIN') {
+      setMessage('Admin login is required.');
       return;
     }
 
@@ -55,7 +53,7 @@ export default function AdminUsersPage() {
       .catch((error) => {
         setMessage(error.message || 'Backend is offline.');
       });
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   async function updateTeacherStatus(teacher, status) {
     if (!currentUser?.token || updatingTeacherId) return;

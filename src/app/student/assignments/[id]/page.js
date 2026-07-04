@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
-import { readStoredUser } from '../../../../lib/authStorage';
+import { useStoredUser } from '../../../../lib/authStorage';
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 const ALLOWED_VIDEO_FORMATS = ['mp4', 'mov', 'webm'];
@@ -82,17 +82,19 @@ function uploadToCloudinary(signature, file, onProgress) {
 export default function StudentAssignmentDetailPage() {
   const params = useParams();
   const assignmentId = params?.id;
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [assignment, setAssignment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading assignment...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading assignment...');
 
   const loadAssignment = useCallback(async () => {
-    if (!currentUser?.token || !assignmentId) return;
+    if (!authReady || !assignmentId) return;
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return;
+    }
 
     const response = await fetch(apiUrl(`/student/assignments/${assignmentId}`), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -102,7 +104,7 @@ export default function StudentAssignmentDetailPage() {
 
     setAssignment(payload.data);
     setMessage('');
-  }, [assignmentId, currentUser]);
+  }, [assignmentId, authReady, currentUser]);
 
   useEffect(() => {
     loadAssignment().catch((error) => setMessage(error.message || 'Backend is offline.'));

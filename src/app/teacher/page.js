@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../components/Nav';
 import { apiUrl } from '../../lib/api';
-import { readStoredUser } from '../../lib/authStorage';
+import { useStoredUser } from '../../lib/authStorage';
 
 export default function TeacherPage() {
-  const [currentUser] = useState(() => readStoredUser('TEACHER'));
+  const { ready: authReady, user: currentUser } = useStoredUser('TEACHER');
   const [dashboard, setDashboard] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading dashboard...' : 'Teacher login is required.'
-  );
+  const [message, setMessage] = useState('Loading dashboard...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Teacher login is required.');
+      return;
+    }
 
     fetch(apiUrl('/teacher/dashboard'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -26,7 +28,7 @@ export default function TeacherPage() {
         setMessage('');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   return (
     <DashboardShell role="teacher" title="Teacher dashboard">

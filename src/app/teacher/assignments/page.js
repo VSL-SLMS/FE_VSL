@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 function formatDate(value) {
   if (!value) return 'No deadline';
@@ -13,17 +13,19 @@ function formatDate(value) {
 }
 
 export default function TeacherAssignmentsPage() {
-  const [currentUser] = useState(() => readStoredUser('TEACHER'));
+  const { ready: authReady, user: currentUser } = useStoredUser('TEACHER');
   const [students, setStudents] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading assignments...' : 'Teacher login is required.'
-  );
+  const [message, setMessage] = useState('Loading assignments...');
 
   const loadData = useCallback(async () => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Teacher login is required.');
+      return;
+    }
 
     const headers = { Authorization: `Bearer ${currentUser.token}` };
     const [studentsResponse, assignmentsResponse] = await Promise.all([
@@ -39,7 +41,7 @@ export default function TeacherAssignmentsPage() {
     setStudents(studentsPayload.data || []);
     setAssignments(assignmentsPayload.data || []);
     setMessage('');
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   useEffect(() => {
     loadData().catch((error) => setMessage(error.message || 'Backend is offline.'));

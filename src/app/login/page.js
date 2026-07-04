@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { loginAction } from '../actions/auth';
 import toast from 'react-hot-toast';
 import { writeStoredUser } from '../../lib/authStorage';
+import { getRoleHomePath } from '../../lib/roleRoutes';
 
 function getRedirectTarget(fallback) {
   const redirectTo = new URLSearchParams(window.location.search).get('redirect');
@@ -37,7 +38,7 @@ export default function LoginPage() {
       writeStoredUser(result.user);
       const defaultTarget = result.user.must_change_password
         ? '/change-password'
-        : `/${result.user.role.toLowerCase()}`;
+        : getRoleHomePath(result.user.role);
       window.location.href = getRedirectTarget(defaultTarget);
     }
   }

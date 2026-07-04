@@ -3,19 +3,21 @@
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 export default function AdminTeacherChangeRequestsPage() {
-  const [currentUser] = useState(() => readStoredUser('ADMIN'));
+  const { ready: authReady, user: currentUser } = useStoredUser('ADMIN');
   const [requests, setRequests] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading teacher change requests...' : 'Admin login is required.'
-  );
+  const [message, setMessage] = useState('Loading teacher change requests...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Admin login is required.');
+      return;
+    }
 
     let cancelled = false;
 
@@ -37,7 +39,7 @@ export default function AdminTeacherChangeRequestsPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUser, refreshKey]);
+  }, [authReady, currentUser, refreshKey]);
 
   async function reviewRequest(id, status) {
     if (!currentUser?.token || loadingId) return;

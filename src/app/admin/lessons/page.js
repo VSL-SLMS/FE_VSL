@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 function flattenLessons(parts) {
   return parts.flatMap((part) =>
@@ -18,15 +18,17 @@ function flattenLessons(parts) {
 }
 
 export default function AdminLessonsPage() {
-  const [currentUser] = useState(() => readStoredUser('ADMIN'));
+  const { ready: authReady, user: currentUser } = useStoredUser('ADMIN');
   const [parts, setParts] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading lessons...' : 'Admin login is required.'
-  );
+  const [message, setMessage] = useState('Loading lessons...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Admin login is required.');
+      return;
+    }
 
     fetch(apiUrl('/lessons'))
       .then(async (response) => {
@@ -36,7 +38,7 @@ export default function AdminLessonsPage() {
         setMessage('');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   const lessons = useMemo(() => flattenLessons(parts), [parts]);
 

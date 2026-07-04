@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiUrl } from '../../lib/api';
-import { readStoredUser, writeStoredUser } from '../../lib/authStorage';
+import { useStoredUser, writeStoredUser } from '../../lib/authStorage';
 
 function getRoleLabel(role) {
   return String(role || '').toLowerCase();
@@ -16,11 +16,16 @@ function formatDateInput(value) {
 
 export default function ProfileForm({ role }) {
   const expectedRole = String(role || '').toUpperCase();
-  const [currentUser, setCurrentUser] = useState(() => readStoredUser(expectedRole));
+  const { ready: authReady, user: storedUser } = useStoredUser(expectedRole);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? '' : `${expectedRole[0]}${expectedRole.slice(1).toLowerCase()} login is required.`
-  );
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!authReady) return;
+    setCurrentUser(storedUser);
+    setMessage(storedUser?.token ? '' : `${expectedRole[0]}${expectedRole.slice(1).toLowerCase()} login is required.`);
+  }, [authReady, expectedRole, storedUser]);
 
   async function onSubmit(event) {
     event.preventDefault();

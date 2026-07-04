@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
-import { readStoredUser } from '../../../lib/authStorage';
+import { useStoredUser } from '../../../lib/authStorage';
 
 function formatDate(value) {
   if (!value) return 'No deadline';
@@ -12,14 +12,16 @@ function formatDate(value) {
 }
 
 export default function StudentAssignmentsPage() {
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [assignments, setAssignments] = useState([]);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading assignments...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading assignments...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return;
+    }
 
     fetch(apiUrl('/student/assignments'), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -31,7 +33,7 @@ export default function StudentAssignmentsPage() {
         setMessage('');
       })
       .catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   return (
     <DashboardShell role="student" title="Assignments">

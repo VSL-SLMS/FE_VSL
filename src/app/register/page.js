@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { registerAction } from '../actions/auth';
 import toast from 'react-hot-toast';
 import { writeStoredUser } from '../../lib/authStorage';
+import { getRoleHomePath } from '../../lib/roleRoutes';
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function RegisterPage() {
     } else {
       toast.success('Registration successful!');
       writeStoredUser(result.user);
-      window.location.href = `/${result.user.role.toLowerCase()}`;
+      window.location.href = getRoleHomePath(result.user.role);
     }
   }
 

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
-import { readStoredUser } from '../../../../lib/authStorage';
+import { useStoredUser } from '../../../../lib/authStorage';
 
 function formatDuration(seconds) {
   const value = Number(seconds || 0);
@@ -18,14 +18,12 @@ function formatDuration(seconds) {
 export default function StudentTopicLessonDetailPage() {
   const params = useParams();
   const slug = params?.slug;
-  const [currentUser] = useState(() => readStoredUser('STUDENT'));
+  const { ready: authReady, user: currentUser } = useStoredUser('STUDENT');
   const [topic, setTopic] = useState(null);
   const [items, setItems] = useState([]);
   const [activeItemId, setActiveItemId] = useState(null);
   const [loadingId, setLoadingId] = useState(null);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading topic lesson...' : 'Student login is required.'
-  );
+  const [message, setMessage] = useState('Loading topic lesson...');
 
   const activeItem = useMemo(() => {
     return items.find((item) => Number(item.id) === Number(activeItemId)) || items[0] || null;
@@ -42,7 +40,11 @@ export default function StudentTopicLessonDetailPage() {
   }
 
   function loadTopic() {
-    if (!currentUser?.token || !slug) return Promise.resolve();
+    if (!authReady || !slug) return Promise.resolve();
+    if (!currentUser?.token) {
+      setMessage('Student login is required.');
+      return Promise.resolve();
+    }
 
     return fetch(apiUrl(`/student/topic-lessons/${slug}`), {
       headers: { Authorization: `Bearer ${currentUser.token}` }
@@ -60,7 +62,7 @@ export default function StudentTopicLessonDetailPage() {
 
   useEffect(() => {
     loadTopic().catch((error) => setMessage(error.message || 'Backend is offline.'));
-  }, [currentUser, slug]);
+  }, [authReady, currentUser, slug]);
 
   async function completeItem(itemId) {
     if (!currentUser?.token || !slug || loadingId) return;

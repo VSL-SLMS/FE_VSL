@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../../components/Nav';
 import { apiUrl } from '../../../../lib/api';
-import { readStoredUser, removeStoredUser } from '../../../../lib/authStorage';
+import { removeStoredUser, useStoredUser } from '../../../../lib/authStorage';
 
 async function verifyAdminSession(adminUser) {
   if (!adminUser?.token) {
@@ -40,11 +40,12 @@ export default function CreateTeacherPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [createdTeacher, setCreatedTeacher] = useState(null);
-  const [currentUser] = useState(() => readStoredUser('ADMIN'));
-  const [message, setMessage] = useState(() => {
-    const storedAdmin = readStoredUser('ADMIN');
-    return storedAdmin?.token ? '' : 'Admin login is required.';
-  });
+  const { ready: authReady, user: currentUser } = useStoredUser('ADMIN');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (authReady && !currentUser?.token) setMessage('Admin login is required.');
+  }, [authReady, currentUser]);
 
   async function onSubmit(event) {
     event.preventDefault();

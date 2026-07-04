@@ -7,7 +7,7 @@ export default function LogoutButton() {
   async function handleLogout() {
     await logoutAction();
     removeStoredUser();
-    window.location.href = '/login';
+    window.location.href = '/';
   }
 
   return (

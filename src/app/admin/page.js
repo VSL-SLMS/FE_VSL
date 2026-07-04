@@ -4,18 +4,20 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '../components/Nav';
 import { apiUrl, fetchApi } from '../../lib/api';
-import { readStoredUser } from '../../lib/authStorage';
+import { useStoredUser } from '../../lib/authStorage';
 
 export default function AdminPage() {
-  const [currentUser] = useState(() => readStoredUser('ADMIN'));
+  const { ready: authReady, user: currentUser } = useStoredUser('ADMIN');
   const [lessonCount, setLessonCount] = useState(0);
   const [teacherRequests, setTeacherRequests] = useState([]);
-  const [message, setMessage] = useState(() =>
-    currentUser?.token ? 'Loading admin dashboard...' : 'Admin login is required.'
-  );
+  const [message, setMessage] = useState('Loading admin dashboard...');
 
   useEffect(() => {
-    if (!currentUser?.token) return;
+    if (!authReady) return;
+    if (!currentUser?.token) {
+      setMessage('Admin login is required.');
+      return;
+    }
 
     let cancelled = false;
 
@@ -48,7 +50,7 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUser]);
+  }, [authReady, currentUser]);
 
   const pendingRequests = teacherRequests.filter((request) => request.status === 'PENDING');
 
