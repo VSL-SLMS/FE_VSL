@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Nav from '../components/Nav';
 import { fetchApi } from '../../lib/api';
+import { getLessonTypeLabel } from '../../lib/lessonDisplay';
 
 async function getLessons() {
   try {
@@ -49,7 +50,7 @@ export default async function LessonsPage() {
                   <div className="lesson-grid">
                     {(chapter.lessons || []).map((lesson) => (
                       <Link className="lesson-card" href={`/lessons/${lesson.slug}`} key={lesson.id}>
-                        <span className="pill">{lesson.lesson_type}</span>
+                        <span className="pill">{getLessonTypeLabel(lesson.lesson_type)}</span>
                         <h4>{lesson.title}</h4>
                         <p className="muted">{lesson.estimated_minutes || 15} min</p>
                       </Link>

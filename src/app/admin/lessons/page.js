@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
 import { useStoredUser } from '../../../lib/authStorage';
+import { getLessonTypeLabel } from '../../../lib/lessonDisplay';
 
 function flattenLessons(parts) {
   return parts.flatMap((part) =>
@@ -100,7 +101,7 @@ export default function AdminLessonsPage() {
                 <span className="eyebrow">{lesson.partTitle} · {lesson.chapterTitle}</span>
                 <h2>{lesson.title}</h2>
                 <p className="muted">
-                  {lesson.lesson_type} · {lesson.estimated_minutes || 15} minutes · Order {lesson.order_index}
+                  {getLessonTypeLabel(lesson.lesson_type)} · {lesson.estimated_minutes || 15} minutes · Order {lesson.order_index}
                 </p>
               </div>
               <button className="btn" type="button" onClick={() => setEditingId(editingId === lesson.id ? null : lesson.id)}>
@@ -121,10 +122,10 @@ export default function AdminLessonsPage() {
                 <div className="field">
                   <label>Lesson type</label>
                   <select name="lessonType" defaultValue={lesson.lesson_type || 'theory'}>
-                    <option value="theory">theory</option>
-                    <option value="practice">practice</option>
-                    <option value="quiz">quiz</option>
-                    <option value="exercise">exercise</option>
+                    <option value="theory">Lesson</option>
+                    <option value="practice">Self-practice</option>
+                    <option value="quiz">Review</option>
+                    <option value="exercise">Review & Practice</option>
                   </select>
                 </div>
                 <div className="field">

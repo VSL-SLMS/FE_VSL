@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { DashboardShell } from '../../components/Nav';
 import { apiUrl } from '../../../lib/api';
 import { useStoredUser } from '../../../lib/authStorage';
+import { getLessonTypeLabel } from '../../../lib/lessonDisplay';
 
 function flattenLessons(parts) {
   return (parts || [])
@@ -141,7 +142,7 @@ export default function StudentLessonsPage() {
                                 <span aria-hidden="true">{completedLesson ? '✓' : '○'}</span>
                                 <span>
                                   <strong>{lesson.title}</strong>
-                                  <small>{lesson.lesson_type} · {lesson.estimated_minutes || 15} min</small>
+                                  <small>{getLessonTypeLabel(lesson.lesson_type)} · {lesson.estimated_minutes || 15} min</small>
                                 </span>
                                 <span className="pill">{completedLesson ? 'Completed' : 'Open'}</span>
                               </Link>

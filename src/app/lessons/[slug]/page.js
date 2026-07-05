@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import CompleteLessonButton from '../../components/CompleteLessonButton';
 import { apiUrl, backendAssetUrl, fetchApi } from '../../../lib/api';
+import { getLessonTypeLabel, isReviewOrPracticeLesson, REVIEW_PRACTICE_HELP_TEXT } from '../../../lib/lessonDisplay';
 import { getRoleHomePath } from '../../../lib/roleRoutes';
 
 async function getSessionUser() {
@@ -147,7 +148,7 @@ function CurriculumSidebar({ parts, currentSlug, mode }) {
                             <span aria-hidden="true">{completed ? '✓' : current ? '→' : '○'}</span>
                             <span>
                               <strong>{lesson.title}</strong>
-                              <small>{lesson.lesson_type} · {lesson.estimated_minutes || 15} min</small>
+                              <small>{getLessonTypeLabel(lesson.lesson_type)} · {lesson.estimated_minutes || 15} min</small>
                             </span>
                           </Link>
                         );
@@ -283,9 +284,12 @@ export default async function LessonDetailPage({ params, searchParams }) {
         <section className="learning-main">
           <div className="lesson-content-bar">
             <div>
-              <span className="eyebrow">{lesson.lesson_type || 'Lesson'}</span>
+              <span className="eyebrow">{getLessonTypeLabel(lesson.lesson_type)}</span>
               <h1>{lesson.title}</h1>
               <p className="muted">{lesson.part_title} / {lesson.chapter_title}</p>
+              {isReviewOrPracticeLesson(lesson.lesson_type) && (
+                <p className="muted">{REVIEW_PRACTICE_HELP_TEXT}</p>
+              )}
             </div>
             {hasLearn && hasBook && (
               <div className="actions" style={{ marginTop: 0 }}>
