@@ -14,11 +14,78 @@ function formatDateInput(value) {
   return String(value).slice(0, 10);
 }
 
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const ALLOWED_AVATAR_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+function formatBytes(value) {
+  if (!value) return '0 MB';
+  return `${(Number(value) / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getFileFormat(file) {
+  const match = file?.name?.match(/\.([a-z0-9]+)$/i);
+  return match ? match[1].toLowerCase() : '';
+}
+
+function validateAvatarFile(file) {
+  if (!file?.name) return null;
+  const format = getFileFormat(file);
+  if (!ALLOWED_AVATAR_FORMATS.includes(format)) {
+    throw new Error('Use JPG, PNG, or WEBP avatar images.');
+  }
+  if (file.type && !ALLOWED_AVATAR_TYPES.includes(file.type)) {
+    throw new Error('Use JPG, PNG, or WEBP avatar images.');
+  }
+  if (file.size > MAX_AVATAR_BYTES) {
+    throw new Error('Avatar image must be 5 MB or smaller.');
+  }
+  return format;
+}
+
+function uploadToCloudinary(signature, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    Object.entries(signature.params || {}).forEach(([key, value]) => {
+      form.append(key, value);
+    });
+    form.append('api_key', signature.apiKey);
+    form.append('signature', signature.signature);
+    form.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', signature.uploadUrl);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Cloudinary upload failed.'));
+    xhr.onload = () => {
+      let payload = {};
+      try {
+        payload = JSON.parse(xhr.responseText || '{}');
+      } catch {
+        reject(new Error('Cloudinary returned an invalid response.'));
+        return;
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(payload);
+        return;
+      }
+      reject(new Error(payload.error?.message || 'Cloudinary upload failed.'));
+    };
+    xhr.send(form);
+  });
+}
+
 export default function ProfileForm({ role }) {
   const expectedRole = String(role || '').toUpperCase();
   const { ready: authReady, user: storedUser } = useStoredUser(expectedRole);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -32,10 +99,40 @@ export default function ProfileForm({ role }) {
     if (!currentUser?.token || loading) return;
 
     setLoading(true);
+    setUploadProgress(null);
     setMessage('Saving profile...');
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const avatarFile = selectedAvatarFile || form.get('avatarFile');
 
     try {
+      let avatarUrl = currentUser.avatar_url || '';
+      const avatarFormat = validateAvatarFile(avatarFile);
+      if (avatarFile?.name) {
+        setMessage('Preparing avatar upload...');
+        const signatureResponse = await fetch(apiUrl('/users/me/avatar/upload-signature'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${currentUser.token}`
+          },
+          body: JSON.stringify({
+            fileName: avatarFile.name,
+            fileSize: avatarFile.size,
+            contentType: avatarFile.type,
+            format: avatarFormat
+          })
+        });
+        const signaturePayload = await signatureResponse.json();
+        if (!signatureResponse.ok) throw new Error(signaturePayload.message || 'Could not prepare avatar upload.');
+
+        setMessage('Uploading avatar...');
+        setUploadProgress(0);
+        const uploaded = await uploadToCloudinary(signaturePayload.data, avatarFile, setUploadProgress);
+        avatarUrl = uploaded.secure_url;
+      }
+
+      setMessage('Saving profile...');
       const response = await fetch(apiUrl('/users/me/profile'), {
         method: 'PATCH',
         headers: {
@@ -45,7 +142,7 @@ export default function ProfileForm({ role }) {
         body: JSON.stringify({
           name: form.get('name'),
           email: expectedRole === 'STUDENT' ? form.get('email') : undefined,
-          avatarUrl: form.get('avatarUrl'),
+          avatarUrl,
           dateOfBirth: expectedRole === 'STUDENT' ? form.get('dateOfBirth') : undefined
         })
       });
@@ -60,6 +157,11 @@ export default function ProfileForm({ role }) {
       };
       writeStoredUser(nextUser);
       setCurrentUser(nextUser);
+      setSelectedAvatarFile(null);
+      setUploadProgress(null);
+      if (formElement.elements.avatarFile) {
+        formElement.elements.avatarFile.value = '';
+      }
       setMessage('Profile updated.');
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -92,6 +194,8 @@ export default function ProfileForm({ role }) {
       };
       writeStoredUser(nextUser);
       setCurrentUser(nextUser);
+      setSelectedAvatarFile(null);
+      setUploadProgress(null);
       setMessage('Avatar removed.');
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -150,8 +254,23 @@ export default function ProfileForm({ role }) {
             </>
           )}
           <div className="field">
-            <label>Avatar URL</label>
-            <input name="avatarUrl" defaultValue={currentUser?.avatar_url || ''} placeholder="https://example.com/avatar.png" />
+            <label>Avatar</label>
+            <input
+              name="avatarFile"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+              disabled={loading}
+              onChange={(event) => {
+                setSelectedAvatarFile(event.target.files?.[0] || null);
+                setUploadProgress(null);
+              }}
+            />
+            {selectedAvatarFile ? (
+              <p className="muted">{selectedAvatarFile.name} · {formatBytes(selectedAvatarFile.size)}</p>
+            ) : null}
+            {uploadProgress !== null ? (
+              <progress className="upload-progress" value={uploadProgress} max="100">{uploadProgress}%</progress>
+            ) : null}
           </div>
           <div className="actions" style={{ marginTop: 4 }}>
             <button className="btn btn-primary" type="submit" disabled={!currentUser?.token || loading}>
