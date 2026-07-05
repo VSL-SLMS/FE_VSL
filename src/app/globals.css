@@ -87,6 +87,30 @@ textarea {
   font-weight: 700;
 }
 
+.profile-chip {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 220px;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+.profile-avatar {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.profile-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .btn {
   display: inline-flex;
   min-height: 42px;
