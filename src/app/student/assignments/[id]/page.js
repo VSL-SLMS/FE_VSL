@@ -87,6 +87,8 @@ export default function StudentAssignmentDetailPage() {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
+  const [commentText, setCommentText] = useState('');
+  const [commentLoading, setCommentLoading] = useState(false);
   const [message, setMessage] = useState('Loading assignment...');
 
   const loadAssignment = useCallback(async () => {
@@ -119,6 +121,7 @@ export default function StudentAssignmentDetailPage() {
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const file = selectedFile || form.get('video');
+    const wasRevision = assignment?.workflow_status === 'NEEDS_REVISION';
 
     try {
       const format = validateVideoFile(file);
@@ -170,7 +173,7 @@ export default function StudentAssignmentDetailPage() {
       if (!response.ok) throw new Error(payload.message || 'Could not submit assignment.');
 
       setAssignment(payload.data);
-      setMessage('Assignment submitted.');
+      setMessage(wasRevision ? 'Assignment resubmitted.' : 'Assignment submitted.');
       setSelectedFile(null);
       setUploadProgress(null);
       formElement.reset();
@@ -178,6 +181,35 @@ export default function StudentAssignmentDetailPage() {
       setMessage(error.message || 'Backend is offline.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onAddComment(event) {
+    event.preventDefault();
+    if (!currentUser?.token || !assignment?.submission_id || commentLoading || !commentText.trim()) return;
+
+    setCommentLoading(true);
+    try {
+      const response = await fetch(apiUrl(`/submissions/${assignment.submission_id}/comments`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ content: commentText })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Could not add comment.');
+      setAssignment((current) => ({
+        ...current,
+        comments: payload.data.comments || current.comments || []
+      }));
+      setCommentText('');
+      setMessage('');
+    } catch (error) {
+      setMessage(error.message || 'Backend is offline.');
+    } finally {
+      setCommentLoading(false);
     }
   }
 
@@ -199,6 +231,12 @@ export default function StudentAssignmentDetailPage() {
 
             <p>{assignment.instructions}</p>
 
+            {assignment.workflow_status === 'NEEDS_REVISION' && assignment.revision_note ? (
+              <div className="empty">
+                <strong>Teacher revision note:</strong> {assignment.revision_note}
+              </div>
+            ) : null}
+
             {assignment.submission_id ? (
               <div className="card" style={{ boxShadow: 'none' }}>
                 <span className="eyebrow">Your submission</span>
@@ -217,11 +255,52 @@ export default function StudentAssignmentDetailPage() {
               </div>
             ) : null}
 
+            {assignment.submission_id ? (
+              <section className="stack">
+                <span className="eyebrow">Comments</span>
+                {assignment.comments?.length ? (
+                  assignment.comments.map((comment) => (
+                    <div className="user-row" key={comment.id}>
+                      <div>
+                        <strong>{comment.author_name || comment.author_role}</strong>
+                        <p className="muted" style={{ marginBottom: 0 }}>{comment.content}</p>
+                      </div>
+                      <span className="pill">{comment.event_type === 'COMMENT' ? comment.author_role : comment.event_type}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="muted">No comments yet.</p>
+                )}
+                <form className="form-grid" onSubmit={onAddComment}>
+                  <div className="field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Add comment</label>
+                    <textarea
+                      rows="3"
+                      value={commentText}
+                      maxLength="1000"
+                      onChange={(event) => setCommentText(event.target.value)}
+                      placeholder="Ask a question or respond to feedback."
+                    />
+                  </div>
+                  <div className="actions" style={{ marginTop: 4 }}>
+                    <button className="btn" type="submit" disabled={commentLoading || !commentText.trim()}>
+                      {commentLoading ? 'Posting...' : 'Post comment'}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            ) : null}
+
             {assignment.can_submit ? (
               <form className="form-grid" onSubmit={onSubmit}>
                 <div className="field">
                   <label>Answer</label>
-                  <textarea name="content" rows="5" placeholder="Optional note for Teacher" />
+                  <textarea
+                    name="content"
+                    rows="5"
+                    defaultValue={assignment.workflow_status === 'NEEDS_REVISION' ? assignment.submission_content || '' : ''}
+                    placeholder="Optional note for Teacher"
+                  />
                 </div>
                 <div className="field">
                   <label>Practice video</label>
@@ -244,7 +323,7 @@ export default function StudentAssignmentDetailPage() {
                 </div>
                 <div className="actions" style={{ marginTop: 4 }}>
                   <button className="btn btn-primary" type="submit" disabled={loading}>
-                    {loading ? 'Submitting...' : 'Submit assignment'}
+                    {loading ? 'Submitting...' : assignment.workflow_status === 'NEEDS_REVISION' ? 'Resubmit' : 'Submit assignment'}
                   </button>
                   <Link className="btn" href="/student/assignments">Back to assignments</Link>
                 </div>

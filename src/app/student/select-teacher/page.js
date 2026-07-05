@@ -72,8 +72,8 @@ export default function SelectTeacherPage() {
       setRecommendedTeacherId(payload.data.recommendedTeacher?.id || recommendedTeachers[0]?.id || '');
       setMessage(
         recommendedTeachers.length
-          ? 'Recommended Teachers are sorted by available capacity first, then reliability.'
-          : 'No Teacher is currently accepting new Students.'
+          ? 'Recommended based on availability, current capacity, and teaching activity.'
+          : 'No available Teacher is currently open for new Students. Please check again later or contact the administrator.'
       );
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
@@ -111,7 +111,7 @@ export default function SelectTeacherPage() {
         hasTeacher
           ? payload.data?.alreadyPending
             ? 'Your teacher change request is already pending Admin approval.'
-            : 'Teacher change request submitted. If Admin approves it, your current Teacher will be cleared and you can choose a new Teacher.'
+            : 'Teacher change request submitted. Your lesson progress, previous submissions, grades, and feedback will not be reset.'
           : 'Teacher selected successfully. Lessons are now unlocked.'
       );
       if (hasTeacher) setRequestSubmitted(true);
@@ -136,7 +136,7 @@ export default function SelectTeacherPage() {
             <h2>{dashboard.student.teacher_name}</h2>
             <p className="muted">{dashboard.student.teacher_email}</p>
             <p className="muted">
-              Admin approval will remove your current Teacher assignment. After approval, return here to choose a new Teacher.
+              Changing Teacher will not reset your lesson progress or previous feedback. Your new Teacher will guide your future learning activities.
             </p>
             {hasPendingRequest && (
               <div className="empty">
@@ -176,7 +176,7 @@ export default function SelectTeacherPage() {
                 <span className="eyebrow">Teacher selection</span>
                 <h2>Choose one Teacher</h2>
                 <p className="muted">
-                  Recommendation uses availability and current student count first. Reliability is secondary.
+                  Recommendation uses open availability, current capacity, and real teaching activity. It is not a quality score.
                 </p>
               </div>
               <button className="btn" type="button" onClick={recommendTeacher} disabled={recommendLoading || loading}>
@@ -195,26 +195,36 @@ export default function SelectTeacherPage() {
             return (
               <article className="card" key={teacher.id}>
                 <div className="page-title" style={{ alignItems: 'flex-start' }}>
-                  <span className="brand-mark">{name?.[0] || 'T'}</span>
+                  {teacher.avatar_url ? (
+                    <img className="profile-avatar" src={teacher.avatar_url} alt="" />
+                  ) : (
+                    <span className="brand-mark">{name?.[0] || 'T'}</span>
+                  )}
                   <div className="user-badges">
                     {isRecommended && <span className="pill">Recommended</span>}
-                    <span className="pill">{teacher.availability_status || 'OPEN'}</span>
+                    <span className="pill">{teacher.availability_status || 'Availability not configured'}</span>
                   </div>
                 </div>
                 <h2>{name}</h2>
                 <p className="muted">{teacher.email}</p>
                 <p className="muted">{teacher.bio || 'No bio provided yet.'}</p>
                 <div className="stack" style={{ gap: 8 }}>
-                  <p className="pill">{teacher.specialization || 'General VSL learning'}</p>
+                  <p className="pill">{teacher.specialization || 'No specialization provided yet.'}</p>
                   <p className="pill">
-                    {teacher.current_student_count || 0}/{teacher.max_students || 30} Students
+                    Current students: {teacher.current_student_count || 0}/{teacher.max_students || 30}
                   </p>
                   <p className="pill">
-                    {teacher.accuracy_verified
-                      ? `${teacher.reliability_label} · ${teacher.accuracy}% verified accuracy`
-                      : 'NEW · no verified grading history yet'}
+                    Assignments graded: {teacher.assignments_graded || 0}
+                  </p>
+                  <p className="pill">
+                    {teacher.experience_badge || 'New Teacher'}
                   </p>
                 </div>
+                {isRecommended ? (
+                  <p className="muted">
+                    Why this Teacher? Open availability and lowest current load among available Teachers; graded activity is only a tie-breaker.
+                  </p>
+                ) : null}
                 <button
                   className="btn btn-primary"
                   type="button"

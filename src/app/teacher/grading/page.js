@@ -8,6 +8,9 @@ import { apiUrl } from '../../../lib/api';
 import { useStoredUser } from '../../../lib/authStorage';
 
 function statusLabel(status) {
+  if (status === 'NEEDS_REVISION') return 'Returned for revision';
+  if (status === 'SUBMITTED') return 'Waiting for review';
+  if (status === 'GRADED') return 'Graded';
   return status === 'NOT_SUBMITTED' ? 'Not submitted' : status;
 }
 
@@ -22,6 +25,10 @@ export default function TeacherGradingPage() {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [detailLoadingId, setDetailLoadingId] = useState(null);
   const [gradingId, setGradingId] = useState(null);
+  const [revisionId, setRevisionId] = useState(null);
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [revisionText, setRevisionText] = useState('');
+  const [commentText, setCommentText] = useState('');
   const [message, setMessage] = useState('Loading submissions...');
 
   const loadSubmissions = useCallback(async () => {
@@ -52,6 +59,8 @@ export default function TeacherGradingPage() {
     if (!response.ok) throw new Error(payload.message || 'Could not load submission detail.');
 
     setSelectedSubmission(payload.data);
+    setRevisionText('');
+    setCommentText('');
     setDetailLoadingId(null);
   }, [currentUser]);
 
@@ -93,6 +102,66 @@ export default function TeacherGradingPage() {
     }
   }
 
+  async function onReturnRevision(event, submissionId) {
+    event.preventDefault();
+    if (!currentUser?.token || revisionId || !revisionText.trim()) return;
+
+    setRevisionId(submissionId);
+    setMessage('Returning submission for revision...');
+
+    try {
+      const response = await fetch(apiUrl(`/teacher/submissions/${submissionId}/return-revision`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ comment: revisionText })
+      });
+
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Could not return submission.');
+
+      await loadSubmissions();
+      setSelectedSubmission(payload.data);
+      setRevisionText('');
+      setMessage('Submission returned for revision.');
+    } catch (error) {
+      setMessage(error.message || 'Backend is offline.');
+    } finally {
+      setRevisionId(null);
+    }
+  }
+
+  async function onAddComment(event, submissionId) {
+    event.preventDefault();
+    if (!currentUser?.token || commentLoading || !commentText.trim()) return;
+
+    setCommentLoading(true);
+    try {
+      const response = await fetch(apiUrl(`/submissions/${submissionId}/comments`), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify({ content: commentText })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.message || 'Could not add comment.');
+      setSelectedSubmission((current) => ({
+        ...current,
+        comments: payload.data.comments || current.comments || []
+      }));
+      setCommentText('');
+      setMessage('');
+    } catch (error) {
+      setMessage(error.message || 'Backend is offline.');
+    } finally {
+      setCommentLoading(false);
+    }
+  }
+
   const submittedCount = submissions.filter((item) => item.submission_status === 'SUBMITTED').length;
 
   return (
@@ -128,7 +197,7 @@ export default function TeacherGradingPage() {
                   <h2>{submission.student_name}</h2>
                   <p className="muted">{submission.student_email}</p>
                 </div>
-                <span className="pill">{statusLabel(submission.submission_status)}</span>
+                <span className="pill">{submission.teacher_facing_status || statusLabel(submission.submission_status)}</span>
               </div>
 
               <div className="card" style={{ boxShadow: 'none' }}>
@@ -166,7 +235,63 @@ export default function TeacherGradingPage() {
                 <video className="submission-video" src={media.playback_url} controls preload="metadata" />
               ) : null}
 
-              {isSelected && submission.can_grade ? (
+              {isSelected ? (
+                <section className="stack">
+                  <span className="eyebrow">Comments</span>
+                  {detail.comments?.length ? (
+                    detail.comments.map((comment) => (
+                      <div className="user-row" key={comment.id}>
+                        <div>
+                          <strong>{comment.author_name || comment.author_role}</strong>
+                          <p className="muted" style={{ marginBottom: 0 }}>{comment.content}</p>
+                        </div>
+                        <span className="pill">{comment.event_type === 'COMMENT' ? comment.author_role : comment.event_type}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="muted">No comments yet.</p>
+                  )}
+                  <form className="form-grid" onSubmit={(event) => onAddComment(event, submission.submission_id)}>
+                    <div className="field" style={{ gridColumn: '1 / -1' }}>
+                      <label>Add comment</label>
+                      <textarea
+                        rows="3"
+                        maxLength="1000"
+                        value={commentText}
+                        onChange={(event) => setCommentText(event.target.value)}
+                      />
+                    </div>
+                    <div className="actions" style={{ marginTop: 4 }}>
+                      <button className="btn" type="submit" disabled={commentLoading || !commentText.trim()}>
+                        {commentLoading ? 'Posting...' : 'Post comment'}
+                      </button>
+                    </div>
+                  </form>
+                </section>
+              ) : null}
+
+              {isSelected && detail.can_return_revision ? (
+                <form className="form-grid" onSubmit={(event) => onReturnRevision(event, submission.submission_id)}>
+                  <div className="field" style={{ gridColumn: '1 / -1' }}>
+                    <label>Revision note</label>
+                    <textarea
+                      rows="3"
+                      required
+                      maxLength="1000"
+                      value={revisionText}
+                      onChange={(event) => setRevisionText(event.target.value)}
+                      placeholder="Tell the Student what to improve before resubmitting."
+                    />
+                  </div>
+                  <div className="actions" style={{ marginTop: 4 }}>
+                    <button className="btn" type="submit" disabled={revisionId === submission.submission_id || !revisionText.trim()}>
+                      {revisionId === submission.submission_id ? 'Returning...' : 'Return for revision'}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+
+              {isSelected && detail.can_grade ? (
                 <form className="form-grid" onSubmit={(event) => onGrade(event, submission.submission_id)}>
                   <div className="field">
                     <label>Score</label>

@@ -73,8 +73,9 @@ export default function StudentPage() {
           </div>
           <div className="card">
             <span className="eyebrow">Assignments</span>
-            <h2>No pending work</h2>
-            <p className="muted">Assigned work will appear after your Teacher creates assignments.</p>
+            <h2>Assignment list</h2>
+            <p className="muted">Open your assignments to see To Do, Submitted, Needs revision, and Graded work.</p>
+            <Link className="btn" href="/student/assignments">View assignments</Link>
           </div>
         </section>
 

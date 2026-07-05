@@ -57,7 +57,7 @@ export default function StudentAssignmentsPage() {
             ) : null}
             <div className="actions">
               <Link className="btn btn-primary" href={`/student/assignments/${assignment.id}`}>
-                {assignment.can_submit ? 'Open and submit' : 'View detail'}
+                {assignment.workflow_status === 'NEEDS_REVISION' ? 'Open and resubmit' : assignment.can_submit ? 'Open and submit' : 'View detail'}
               </Link>
             </div>
           </section>
