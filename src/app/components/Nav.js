@@ -4,7 +4,7 @@ import Link from 'next/link';
 import LogoutButton from './LogoutButton';
 import { useMemo, useSyncExternalStore } from 'react';
 import { logoutAction } from '../actions/auth';
-import { removeStoredUser } from '../../lib/authStorage';
+import { removeStoredUser, useStoredUser } from '../../lib/authStorage';
 import { getRoleHomePath } from '../../lib/roleRoutes';
 
 function getDashboardHref(user) {
@@ -82,6 +82,9 @@ export function HomeNav() {
 
 export function DashboardShell({ role, title, children }) {
   const roleTitle = role[0].toUpperCase() + role.slice(1);
+  const { user: currentUser } = useStoredUser(role.toUpperCase());
+  const displayName = currentUser?.display_name || currentUser?.name || currentUser?.username || currentUser?.email || roleTitle;
+  const avatarUrl = currentUser?.avatar_url || currentUser?.avatarUrl;
   const nav = {
     student: [
       ['Dashboard', '/student', '▦'],
@@ -134,7 +137,18 @@ export function DashboardShell({ role, title, children }) {
         <header className="topbar">
           <input className="search-box" placeholder="Search lessons, students..." />
           <div className="nav-actions">
-            <span className="brand-mark" style={{ width: 34, height: 34 }}>{role[0].toUpperCase()}</span>
+            {role === 'student' ? (
+              <span className="profile-chip" title={displayName}>
+                {avatarUrl ? (
+                  <img className="profile-avatar" src={avatarUrl} alt="" />
+                ) : (
+                  <span className="brand-mark profile-avatar">{displayName.slice(0, 1).toUpperCase()}</span>
+                )}
+                <span className="profile-name">{displayName}</span>
+              </span>
+            ) : (
+              <span className="brand-mark" style={{ width: 34, height: 34 }}>{role[0].toUpperCase()}</span>
+            )}
           </div>
         </header>
         <main className="dashboard-content">
