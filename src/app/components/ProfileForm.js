@@ -143,7 +143,8 @@ export default function ProfileForm({ role }) {
           name: form.get('name'),
           email: expectedRole === 'STUDENT' ? form.get('email') : undefined,
           avatarUrl,
-          dateOfBirth: expectedRole === 'STUDENT' ? form.get('dateOfBirth') : undefined
+          dateOfBirth: expectedRole === 'STUDENT' ? form.get('dateOfBirth') : undefined,
+          bio: expectedRole === 'TEACHER' ? form.get('bio') : undefined
         })
       });
 
@@ -252,6 +253,18 @@ export default function ProfileForm({ role }) {
                 <input name="dateOfBirth" type="date" defaultValue={formatDateInput(currentUser?.date_of_birth)} />
               </div>
             </>
+          )}
+          {expectedRole === 'TEACHER' && (
+            <div className="field" style={{ gridColumn: '1 / -1' }}>
+              <label>Bio</label>
+              <textarea
+                name="bio"
+                rows="4"
+                maxLength="1000"
+                defaultValue={currentUser?.bio || ''}
+                placeholder="Short profile shown to Students during teacher selection."
+              />
+            </div>
           )}
           <div className="field">
             <label>Avatar</label>

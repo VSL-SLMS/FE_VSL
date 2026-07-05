@@ -137,18 +137,14 @@ export function DashboardShell({ role, title, children }) {
         <header className="topbar">
           <input className="search-box" placeholder="Search lessons, students..." />
           <div className="nav-actions">
-            {role === 'student' ? (
-              <span className="profile-chip" title={displayName}>
-                {avatarUrl ? (
-                  <img className="profile-avatar" src={avatarUrl} alt="" />
-                ) : (
-                  <span className="brand-mark profile-avatar">{displayName.slice(0, 1).toUpperCase()}</span>
-                )}
-                <span className="profile-name">{displayName}</span>
-              </span>
-            ) : (
-              <span className="brand-mark" style={{ width: 34, height: 34 }}>{role[0].toUpperCase()}</span>
-            )}
+            <span className="profile-chip" title={displayName}>
+              {avatarUrl ? (
+                <img className="profile-avatar" src={avatarUrl} alt="" />
+              ) : (
+                <span className="brand-mark profile-avatar">{displayName.slice(0, 1).toUpperCase()}</span>
+              )}
+              <span className="profile-name">{displayName}</span>
+            </span>
           </div>
         </header>
         <main className="dashboard-content">
