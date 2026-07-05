@@ -61,7 +61,8 @@ export default function TeacherAssignmentsPage() {
 
     setLoading(true);
     setMessage('Creating assignment...');
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
 
     try {
       const response = await fetch(apiUrl('/teacher/assignments'), {
@@ -82,7 +83,7 @@ export default function TeacherAssignmentsPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.message || 'Could not create assignment.');
 
-      event.currentTarget.reset();
+      formElement.reset();
       setSelectedStudents([]);
       await loadData();
       setMessage('Assignment created.');

@@ -159,7 +159,7 @@ export default function CreateTeacherPage() {
                 <p className="muted">Temporary password email was sent.</p>
               ) : (
                 <p className="muted">
-                  SMTP email was not sent
+                  Email was not sent
                   {createdTeacher.email_delivery?.reason ? ` (${createdTeacher.email_delivery.reason})` : ''}.
                   Share the temporary password manually.
                 </p>

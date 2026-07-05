@@ -116,7 +116,8 @@ export default function StudentAssignmentDetailPage() {
 
     setLoading(true);
     setUploadProgress(null);
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const file = selectedFile || form.get('video');
 
     try {
@@ -172,7 +173,7 @@ export default function StudentAssignmentDetailPage() {
       setMessage('Assignment submitted.');
       setSelectedFile(null);
       setUploadProgress(null);
-      event.currentTarget.reset();
+      formElement.reset();
     } catch (error) {
       setMessage(error.message || 'Backend is offline.');
     } finally {
